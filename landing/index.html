@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amplify AI — Get 5x Better AI Responses</title>
+  <meta name="description" content="Amplify transforms rough prompts into expertly engineered ones. Get 5x better AI responses with one click.">
+
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+  <!-- Open Graph / Social Sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Amplify AI - Get 5x Better AI Responses">
+  <meta property="og:description" content="Amplify transforms rough prompts into expertly engineered ones. One click. 5x better responses.">
+  <meta property="og:url" content="https://amplifyai.com">
+  <meta property="og:site_name" content="Amplify AI">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Amplify AI - Get 5x Better AI Responses">
+  <meta name="twitter:description" content="Transform rough prompts into expertly engineered ones - right inside ChatGPT.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Animated hero background mesh -->
+  <div class="hero-bg-mesh" id="hero-bg-mesh" aria-hidden="true">
+    <div class="mesh-orb mesh-orb-1"></div>
+    <div class="mesh-orb mesh-orb-2"></div>
+    <div class="mesh-orb mesh-orb-3"></div>
+  </div>
+
+  <!-- NAV (glassmorphism) -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner container">
+      <a href="#" class="nav-logo" data-tab="home">
+        <img src="logo.svg" alt="Amplify" class="nav-logo-icon" width="32" height="32">
+        <span class="nav-logo-text">Amplify</span>
+      </a>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="home">Home</button>
+        <button class="nav-tab" data-tab="waitlist">Waitlist</button>
+        <button class="nav-tab" data-tab="updates">Updates</button>
+      </div>
+      <div class="nav-right">
+        <button class="btn btn-sm btn-primary" data-tab="waitlist">Join Waitlist</button>
+        <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <div class="nav-mobile-menu" id="nav-mobile-menu">
+      <button class="nav-mobile-tab active" data-tab="home">Home</button>
+      <button class="nav-mobile-tab" data-tab="waitlist">Waitlist</button>
+      <button class="nav-mobile-tab" data-tab="updates">Updates</button>
+    </div>
+  </nav>
+
+  <!-- ===================== HOME TAB ===================== -->
+  <main class="tab-content active" id="tab-home">
+
+    <!-- HERO — split layout with text reveals -->
+    <section class="hero">
+      <div class="container">
+        <div class="hero-split">
+          <div class="hero-left" data-parallax="0.03">
+            <div class="hero-badge">
+              <span class="badge-dot"></span>
+              Chrome Extension &middot; Coming Soon
+            </div>
+            <h1 class="hero-title">
+              <span class="reveal-line"><span class="reveal-word">Your prompts are</span></span>
+              <span class="reveal-line"><span class="reveal-word">leaving <span class="accent gradient-text">performance</span></span></span>
+              <span class="reveal-line"><span class="reveal-word">on the table.</span></span>
+            </h1>
+            <p class="hero-sub reveal-fade">
+              Amplify transforms rough prompts into expertly engineered ones &mdash; right inside ChatGPT.
+              <strong>One click. 5x better responses.</strong>
+            </p>
+            <div class="hero-ctas reveal-fade" style="--reveal-delay: 0.5s">
+              <button class="btn btn-primary btn-lg" data-tab="waitlist">Join the Waitlist</button>
+              <a href="#how-it-works" class="btn btn-ghost btn-lg">Learn More</a>
+            </div>
+          </div>
+
+          <!-- DEMO -->
+          <div class="demo-window-wrap" data-parallax="-0.02">
+            <div class="demo-window glass-card-dark">
+              <div class="demo-titlebar">
+                <span class="demo-dot red"></span>
+                <span class="demo-dot yellow"></span>
+                <span class="demo-dot green"></span>
+                <span class="demo-titlebar-text">ChatGPT</span>
+              </div>
+              <div class="demo-body" id="demo-body">
+                <!-- Popup — initial hover card -->
+                <div class="demo-amplify-popup" id="demo-popup">
+                  <div class="demo-amp-header">
+                    <img src="logo.svg" alt="" class="demo-amp-logo-img" width="22" height="22">
+                    <span class="demo-amp-brand">Amplify</span>
+                    <span class="demo-amp-badge">AI-Powered</span>
+                  </div>
+                  <p class="demo-amp-msg"><strong>This prompt can be 5x better.</strong> Answer a few quick questions and Amplify will engineer the perfect prompt for you.</p>
+                  <div class="demo-amp-quality">
+                    <div class="demo-qual-item demo-qual-bad">
+                      <span class="demo-qual-label">Current</span>
+                      <span class="demo-qual-score" id="demo-qual-before">2/10</span>
+                    </div>
+                    <svg class="demo-qual-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    <div class="demo-qual-item demo-qual-good">
+                      <span class="demo-qual-label">After Amplify</span>
+                      <span class="demo-qual-score" id="demo-qual-after">9.4/10</span>
+                    </div>
+                  </div>
+                  <button class="demo-amp-btn" id="demo-personalize-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    Personalize &amp; Amplify
+                  </button>
+                </div>
+
+                <!-- Quiz — flashcard MCQs -->
+                <div class="demo-quiz" id="demo-quiz">
+                  <div class="quiz-top-bar">
+                    <div class="quiz-logo-row">
+                      <img src="logo.svg" alt="" class="demo-amp-logo-img" width="20" height="20">
+                      <span class="quiz-title-text">Personalize</span>
+                    </div>
+                    <span class="quiz-step-badge" id="quiz-step-badge">1 / 5</span>
+                  </div>
+                  <div class="quiz-progress">
+                    <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+                  </div>
+                  <div class="quiz-card-area" id="quiz-card-area">
+                    <div class="quiz-question" id="quiz-question"></div>
+                    <div class="quiz-options" id="quiz-options"></div>
+                    <div class="quiz-other-row" id="quiz-other-row" style="display:none;">
+                      <input type="text" class="quiz-other-input" id="quiz-other-input" placeholder="Type your answer..." maxlength="200">
+                      <button class="quiz-other-confirm" id="quiz-other-confirm">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="demo-chatgpt-input" id="demo-input">
+                  <span id="demo-typed"></span><span class="demo-cursor" id="demo-cursor">|</span>
+                </div>
+                <p class="demo-status" id="demo-status"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS — with pipeline flow dots -->
+    <section class="section section-alt" id="how-it-works">
+      <div class="container">
+        <h2 class="section-title">How <span class="accent gradient-text">Amplify</span> Works</h2>
+        <p class="section-sub">Three steps. Zero friction. Works everywhere you type.</p>
+        <div class="workflow-diagram">
+          <div class="workflow-step glass-card fade-up">
+            <div class="workflow-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M6 16h8"/></svg>
+            </div>
+            <h3>Type Naturally</h3>
+            <p>Write whatever comes to mind. Rough, lazy, incomplete &mdash; it all works.</p>
+          </div>
+          <div class="workflow-arrow fade-up">
+            <div class="flow-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="workflow-step glass-card fade-up" style="animation-delay:.1s">
+            <div class="workflow-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+            <h3>Answer &amp; Personalize</h3>
+            <p>Amplify asks smart questions about your context, then tailors the prompt to you.</p>
+          </div>
+          <div class="workflow-arrow fade-up">
+            <div class="flow-dots"><span></span><span></span><span></span></div>
+          </div>
+          <div class="workflow-step glass-card fade-up" style="animation-delay:.2s">
+            <div class="workflow-icon-box">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+            <h3>Get Better Results</h3>
+            <p>Watch the AI output dramatically improve. Same question, 5x better answer.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MARQUEE TICKER -->
+    <div class="marquee-section" aria-hidden="true">
+      <div class="marquee-track">
+        <span class="marquee-item">Role Assignment</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Specificity Injection</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Chain-of-Thought</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Output Format</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Task Decomposition</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Negative Constraints</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Evaluation Criteria</span>
+        <span class="marquee-dot">&middot;</span>
+        <!-- Duplicate for seamless loop -->
+        <span class="marquee-item">Role Assignment</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Specificity Injection</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Chain-of-Thought</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Output Format</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Task Decomposition</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Negative Constraints</span>
+        <span class="marquee-dot">&middot;</span>
+        <span class="marquee-item">Evaluation Criteria</span>
+        <span class="marquee-dot">&middot;</span>
+      </div>
+    </div>
+
+    <!-- PROMPTING TECHNIQUES — Bento Grid -->
+    <section class="section" id="techniques">
+      <div class="container">
+        <h2 class="section-title">7 Techniques That <span class="accent gradient-text">Amplify</span> Every Prompt</h2>
+        <p class="section-sub">Each prompt is automatically enhanced using research-backed prompt engineering methods.</p>
+        <div class="bento-grid">
+          <!-- Card 1: TALL (spans 2 rows) -->
+          <div class="bento-card bento-tall glass-card fade-up">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <h4>Role Assignment</h4>
+            <p>Assigns an expert persona so the AI responds with domain-specific depth and authority.</p>
+            <code class="tech-example">"You are a registered dietitian with 15 years of experience..."</code>
+            <div class="tech-visual">
+              <div class="signal-bar" style="--bar-h: 30%"></div>
+              <div class="signal-bar" style="--bar-h: 55%"></div>
+              <div class="signal-bar" style="--bar-h: 80%"></div>
+              <div class="signal-bar" style="--bar-h: 95%"></div>
+              <div class="signal-bar" style="--bar-h: 70%"></div>
+            </div>
+          </div>
+          <!-- Card 2 -->
+          <div class="bento-card glass-card fade-up" style="animation-delay:.05s">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            </div>
+            <h4>Specificity Injection</h4>
+            <p>Replaces vague words with concrete parameters, constraints, and measurable targets.</p>
+            <code class="tech-example">"lose weight" &rarr; "1-2 lbs/week for a 185lb sedentary male"</code>
+          </div>
+          <!-- Card 3 -->
+          <div class="bento-card glass-card fade-up" style="animation-delay:.1s">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
+            </div>
+            <h4>Chain-of-Thought</h4>
+            <p>Instructs the AI to reason step-by-step before answering, dramatically improving accuracy.</p>
+            <code class="tech-example">"First calculate X, then design Y based on that result."</code>
+          </div>
+          <!-- Card 4: WIDE (spans 2 columns) -->
+          <div class="bento-card bento-wide glass-card fade-up" style="animation-delay:.15s">
+            <div class="bento-wide-inner">
+              <div>
+                <div class="tech-icon">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                </div>
+                <h4>Output Format</h4>
+                <p>Specifies the exact structure &mdash; tables, bullet points, JSON &mdash; so the output is immediately usable.</p>
+              </div>
+              <code class="tech-example">"Present as a table: Day | Meal | Calories | Protein"</code>
+            </div>
+          </div>
+          <!-- Card 5 -->
+          <div class="bento-card glass-card fade-up" style="animation-delay:.2s">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+            </div>
+            <h4>Task Decomposition</h4>
+            <p>Breaks complex requests into numbered sub-tasks so nothing gets missed or forgotten.</p>
+            <code class="tech-example">"Structure: 1) Summary, 2) KPIs, 3) Analysis, 4) Actions"</code>
+          </div>
+          <!-- Card 6 -->
+          <div class="bento-card glass-card fade-up" style="animation-delay:.25s">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+            </div>
+            <h4>Negative Constraints</h4>
+            <p>Tells the AI what to avoid &mdash; eliminating generic filler, hallucinations, and irrelevant tangents.</p>
+            <code class="tech-example">"No supplements, juice cleanses, or extreme diets."</code>
+          </div>
+          <!-- Card 7 -->
+          <div class="bento-card glass-card fade-up" style="animation-delay:.3s">
+            <div class="tech-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <h4>Evaluation Criteria</h4>
+            <p>Sets quality standards so the AI knows how its output will be judged and self-corrects.</p>
+            <code class="tech-example">"Evaluate on: accuracy, feasibility, cost efficiency."</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISION + FEATURES -->
+    <section class="section section-alt" id="vision">
+      <div class="container">
+        <div class="vision-layout">
+          <div class="vision-left fade-up">
+            <h2 class="vision-title">V<br>I<br>S<br>I<br>O<br>N</h2>
+            <p class="vision-desc">Amplify will learn your style, detect your context, and transform your text automatically &mdash; across every surface you type on.</p>
+          </div>
+          <div class="vision-right">
+            <h3 class="vision-section-label">Upcoming Features</h3>
+            <div class="feature-cards">
+              <div class="feature-card glass-card fade-up">
+                <span class="feature-num">1</span>
+                <h4>Prompt Mode</h4>
+                <p>Transform rough AI prompts into professionally engineered ones using 7+ techniques.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.05s">
+                <span class="feature-num">2</span>
+                <h4>Email Mode</h4>
+                <p>Convert lazy email drafts into polished, professional messages tailored to your recipient.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.1s">
+                <span class="feature-num">3</span>
+                <h4>Personal Mode</h4>
+                <p>Craft messages that match your texting style while conveying exactly what you mean.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.15s">
+                <span class="feature-num">4</span>
+                <h4>Auto Mode</h4>
+                <p>AI detects context automatically &mdash; no mode selection needed. Just type and go.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.2s">
+                <span class="feature-num">5</span>
+                <h4>Style Learning</h4>
+                <p>Amplify learns how you write and adapts transformations to preserve your unique voice.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.25s">
+                <span class="feature-num">6</span>
+                <h4>Multi-Platform</h4>
+                <p>Works across ChatGPT, Claude, Gemini, Gmail, LinkedIn, WhatsApp Web, and more.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.3s">
+                <span class="feature-num">7</span>
+                <h4>Tone Scoring</h4>
+                <p>See a live score of how your message will land &mdash; professional, casual, persuasive, or empathetic.</p>
+              </div>
+              <div class="feature-card glass-card fade-up" style="animation-delay:.35s">
+                <span class="feature-num">8</span>
+                <h4>iOS Keyboard</h4>
+                <p>Transform messages from any app on your phone &mdash; directly from the keyboard, before you hit send.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BEFORE / AFTER — Interactive Slider -->
+    <section class="section" id="before-after">
+      <div class="container">
+        <h2 class="section-title">See the <span class="accent gradient-text">Difference</span></h2>
+        <p class="section-sub">Drag the slider to compare. Same question &mdash; completely different AI output.</p>
+        <div class="compare-slider-wrap">
+          <div class="compare-slider" id="compare-slider">
+            <!-- After layer (underneath, full width) -->
+            <div class="compare-pane compare-pane-after">
+              <div class="compare-pane-inner">
+                <div class="compare-label compare-label-after">After Amplify</div>
+                <div class="compare-content compare-content-after">
+                  <code>You are an expert registered dietitian with 15 years of clinical experience in evidence-based weight management.
+
+Create a detailed 7-day meal plan for an adult male (25-40), who is moderately active (3-4x/week), targeting sustainable fat loss of 1-2 lbs/week.
+
+Requirements:
+- Dietary: No restrictions
+- Budget: $100-$150/week
+- 3 meals + 2 snacks per day
+- Flag batch-preppable meals
+
+Output format: Weekly plan + grocery list.</code>
+                </div>
+                <div class="compare-result">
+                  <div class="compare-result-label">AI Response Quality</div>
+                  <div class="compare-bar-track"><div class="compare-bar compare-bar-after" data-width="92"></div></div>
+                  <span class="compare-score compare-score-after">9.4/10 &mdash; Detailed, structured, actionable</span>
+                </div>
+              </div>
+            </div>
+            <!-- Before layer (on top, clipped) -->
+            <div class="compare-pane compare-pane-before" id="compare-before-layer">
+              <div class="compare-pane-inner">
+                <div class="compare-label compare-label-before">Before</div>
+                <div class="compare-content">
+                  <code>write me a meal plan for losing weight</code>
+                </div>
+                <div class="compare-result">
+                  <div class="compare-result-label">AI Response Quality</div>
+                  <div class="compare-bar-track"><div class="compare-bar compare-bar-before" data-width="20"></div></div>
+                  <span class="compare-score compare-score-before">2/10 &mdash; Generic, vague, unusable</span>
+                </div>
+              </div>
+            </div>
+            <!-- Drag Handle -->
+            <div class="compare-handle" id="compare-handle">
+              <div class="compare-handle-line"></div>
+              <div class="compare-handle-knob">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 6l-4 6 4 6M16 6l4 6-4 6"/></svg>
+              </div>
+              <div class="compare-handle-line"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sticky floating CTA (appears on scroll) -->
+    <div class="floating-cta" id="floating-cta">
+      <button class="btn btn-accent btn-sm" data-tab="waitlist">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Join the Waitlist
+      </button>
+    </div>
+
+  </main>
+
+  <!-- ===================== WAITLIST TAB ===================== -->
+  <main class="tab-content" id="tab-waitlist">
+    <section class="waitlist-page">
+      <div class="container">
+        <div class="waitlist-hero">
+          <h1 class="section-title">Join the <span class="accent gradient-text">Waitlist</span></h1>
+          <p class="section-sub">Be first to transform your prompts. First 100 users get early access.</p>
+          <div class="waitlist-counter">
+            <div class="counter-item">
+              <span class="counter-num" id="counter-total" data-count="0">0</span>
+              <span class="counter-label">On waitlist</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="waitlist-auth" id="waitlist-auth-signup">
+          <div class="auth-card glass-card">
+            <h3>Get your spot</h3>
+            <form id="waitlist-signup-form">
+              <div class="form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;tab-index:-1;">
+                <label for="signup-website">Website</label>
+                <input type="text" id="signup-website" name="website" tabindex="-1" autocomplete="off">
+              </div>
+              <div class="form-field">
+                <label for="signup-email">Email</label>
+                <input type="email" id="signup-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+              </div>
+              <div class="form-field">
+                <label for="signup-name">Name <span class="form-optional">(optional)</span></label>
+                <input type="text" id="signup-name" placeholder="Your name" maxlength="100" autocomplete="name">
+              </div>
+              <input type="hidden" id="signup-ts" value="">
+              <button type="submit" class="btn btn-primary btn-lg btn-block">Join Waitlist</button>
+            </form>
+            <p class="auth-footer">Already signed up? <button class="link-btn" id="show-check-btn">Check your position</button></p>
+          </div>
+        </div>
+
+        <div class="waitlist-auth" id="waitlist-auth-check" style="display:none;">
+          <div class="auth-card glass-card">
+            <h3>Check your position</h3>
+            <form id="waitlist-check-form">
+              <div class="form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;tab-index:-1;">
+                <label for="check-phone">Phone</label>
+                <input type="text" id="check-phone" name="phone" tabindex="-1" autocomplete="off">
+              </div>
+              <div class="form-field">
+                <label for="check-email">Email</label>
+                <input type="email" id="check-email" placeholder="you@email.com" required maxlength="254">
+              </div>
+              <div class="form-field">
+                <label for="check-code">Access Code</label>
+                <input type="text" id="check-code" placeholder="AMP-XXXXXX" required maxlength="10" autocomplete="off" spellcheck="false">
+              </div>
+              <input type="hidden" id="check-ts" value="">
+              <button type="submit" class="btn btn-primary btn-lg btn-block">Check Position</button>
+            </form>
+            <p class="auth-footer">New here? <button class="link-btn" id="show-signup-btn">Join the waitlist</button></p>
+          </div>
+        </div>
+
+        <div class="waitlist-auth" id="waitlist-dashboard" style="display:none;">
+          <div class="auth-card glass-card dashboard-card">
+            <div class="dashboard-header">
+              <div class="success-check">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2d8f4e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
+              </div>
+              <h3>You're in, <span id="dash-name">there</span>!</h3>
+            </div>
+            <div class="dashboard-stats">
+              <div class="dash-stat">
+                <span class="dash-stat-num" id="dash-position">--</span>
+                <span class="dash-stat-label">Your Position</span>
+              </div>
+            </div>
+            <div class="dash-section">
+              <h4>Your Access Code</h4>
+              <p class="dash-hint">Save this to check your position later</p>
+              <div class="code-display">
+                <code id="dash-code">AMP-XXXXXX</code>
+                <button class="btn btn-sm btn-ghost copy-btn" data-copy="dash-code">Copy</button>
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" id="dash-logout">Sign Out</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== UPDATES TAB ===================== -->
+  <main class="tab-content" id="tab-updates">
+    <section class="updates-page">
+      <div class="container">
+        <h1 class="section-title">Product <span class="accent gradient-text">Updates</span></h1>
+        <p class="section-sub">Follow our journey from idea to launch.</p>
+        <div class="updates-timeline">
+          <div class="update-item fade-up">
+            <div class="update-date"><span class="update-month">Apr</span><span class="update-day">13</span></div>
+            <div class="update-line"></div>
+            <div class="update-card glass-card">
+              <div class="update-tag update-tag-milestone">Milestone</div>
+              <h3>Waitlist Open</h3>
+              <p>We've officially opened the Amplify waitlist. First 100 members get early access to the Chrome extension.</p>
+            </div>
+          </div>
+          <div class="update-item fade-up" style="animation-delay:.1s">
+            <div class="update-date"><span class="update-month">Apr</span><span class="update-day">12</span></div>
+            <div class="update-line"></div>
+            <div class="update-card glass-card">
+              <div class="update-tag update-tag-feature">Feature</div>
+              <h3>Prompt Engine Complete</h3>
+              <p>The core prompt transformation engine is working. It applies 7 prompt engineering techniques automatically.</p>
+            </div>
+          </div>
+          <div class="update-item fade-up" style="animation-delay:.2s">
+            <div class="update-date"><span class="update-month">Apr</span><span class="update-day">10</span></div>
+            <div class="update-line"></div>
+            <div class="update-card glass-card">
+              <div class="update-tag update-tag-idea">Idea</div>
+              <h3>The Problem We're Solving</h3>
+              <p>400M+ people use ChatGPT. Most get mediocre responses because they write mediocre prompts. Nobody has solved this at keyboard level. Until now.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="logo.svg" alt="Amplify" class="nav-logo-icon" width="28" height="28">
+        <span class="nav-logo-text">Amplify</span>
+      </div>
+      <p class="footer-copy">&copy; 2025 Amplify AI. All rights reserved.</p>
+      <div class="footer-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

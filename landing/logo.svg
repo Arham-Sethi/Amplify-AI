@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 130">
+  <!-- Left parenthesis -->
+  <path d="M 44 8 C 14 30, 8 55, 8 62 C 8 69, 14 94, 44 116"
+        stroke="#2c1810" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <!-- Right parenthesis -->
+  <path d="M 76 8 C 106 30, 112 55, 112 62 C 112 69, 106 94, 76 116"
+        stroke="#2c1810" stroke-width="13" fill="none" stroke-linecap="round"/>
+  <!-- Letter a -->
+  <text x="60" y="82" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+        font-size="62" font-weight="700" fill="#2c1810">a</text>
+</svg>

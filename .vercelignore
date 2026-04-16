@@ -1,0 +1,6 @@
+extension/
+.claude/
+mobile-demo/
+SECURITY_ARCHITECTURE.md
+supabase/
+.env.example

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Amplify Demo</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; frame-ancestors 'none'; base-uri 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #212121;
+      --bg-input: #2f2f2f;
+      --bg-popup: #1a1a2e;
+      --text: #e4e4e7;
+      --text-secondary: #9a9a9a;
+      --purple: #8b5cf6;
+      --blue: #3b82f6;
+      --gradient: linear-gradient(135deg, #8b5cf6, #3b82f6);
+      --border: rgba(139,92,246,0.2);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Fake ChatGPT mobile UI */
+    .app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-width: 100%;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .topbar-icon {
+      width: 28px;
+      height: 28px;
+      background: #10a37f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .topbar-icon svg { width: 16px; height: 16px; }
+    .topbar-title { font-size: 16px; font-weight: 600; }
+    .topbar-subtitle { font-size: 11px; color: var(--text-secondary); }
+    .topbar-right {
+      width: 32px;
+      height: 32px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Chat area */
+    .chat-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    /* Prompt selector */
+    .prompt-selector {
+      display: flex;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      overflow-x: auto;
+      flex-shrink: 0;
+    }
+    .prompt-chip {
+      padding: 8px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .prompt-chip:hover, .prompt-chip.active {
+      background: rgba(139,92,246,0.12);
+      border-color: var(--purple);
+      color: var(--text);
+    }
+
+    /* Input area */
+    .input-area {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 12px 16px 24px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+    .input-box {
+      flex: 1;
+      min-height: 44px;
+      max-height: 200px;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 22px;
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-y: auto;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .input-box.underlined {
+      border-color: var(--purple);
+      box-shadow: 0 0 0 1px var(--purple), 0 0 16px rgba(139,92,246,0.12);
+    }
+    .input-box .cursor {
+      color: var(--purple);
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .send-btn {
+      width: 40px;
+      height: 40px;
+      background: var(--gradient);
+      border: none;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* Amplify popup */
+    .amplify-popup {
+      background: var(--bg-popup);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: slide-up 0.35s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes slide-down {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(10px) scale(0.97); }
+    }
+    .popup-hidden { display: none; }
+
+    .amp-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .amp-logo {
+      font-family: 'Courier New', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      color: white;
+      background: var(--gradient);
+      padding: 4px 5px;
+      border-radius: 5px;
+      letter-spacing: -1px;
+    }
+    .amp-brand {
+      font-size: 14px;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .amp-msg {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 10px;
+    }
+    .amp-msg strong { color: var(--text); }
+
+    .amp-techniques {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .amp-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 100px;
+      background: rgba(139,92,246,0.1);
+      color: #a78bfa;
+      border: 1px solid rgba(139,92,246,0.15);
+    }
+
+    .amp-transform-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 11px 16px;
+      background: var(--gradient);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .amp-transform-btn:active { transform: scale(0.97); }
+
+    /* Sparkle on completion */
+    .sparkle {
+      animation: sparkle-glow 0.8s ease-out;
+    }
+    @keyframes sparkle-glow {
+      0% { box-shadow: 0 0 0 0 rgba(139,92,246,0.3); }
+      50% { box-shadow: 0 0 20px 4px rgba(139,92,246,0.15); }
+      100% { box-shadow: 0 0 0 0 rgba(139,92,246,0); }
+    }
+
+    /* Status bar at bottom for demo controls */
+    .demo-controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px 16px;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      z-index: 100;
+      border-top: 1px solid rgba(139,92,246,0.2);
+    }
+    .demo-controls.hidden { display: none; }
+    .demo-controls button {
+      padding: 6px 14px;
+      background: var(--gradient);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .demo-controls span {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    .hide-controls-btn {
+      background: rgba(255,255,255,0.1) !important;
+      color: var(--text-secondary) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Top bar (fake ChatGPT) -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-icon">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M22.2 8.4c.5-1.5.2-3.2-.8-4.5-1.6-2-4.2-2.8-6.5-2-1.4-1.1-3.2-1.6-5-1.3C7.6.9 5.6 2.5 5 4.8 3.4 5.2 2 6.4 1.4 8c-1 2.3-.3 5 1.5 6.6-.5 1.5-.2 3.2.8 4.5 1.6 2 4.2 2.8 6.5 2 1.4 1.1 3.2 1.6 5 1.3 2.3-.3 4.3-1.9 4.9-4.2 1.6-.4 3-1.6 3.6-3.2 1-2.3.3-5-1.5-6.6z"/></svg>
+        </div>
+        <div>
+          <div class="topbar-title">ChatGPT</div>
+          <div class="topbar-subtitle">GPT-4o</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="chat-area" id="chat-area">
+      <!-- Popup appears here -->
+      <div class="amplify-popup popup-hidden" id="popup">
+        <div class="amp-header">
+          <span class="amp-logo">[.o|.o]</span>
+          <span class="amp-brand">Amplify</span>
+        </div>
+        <p class="amp-msg"><strong>Get 5x better responses</strong> &mdash; optimize this prompt</p>
+        <div class="amp-techniques" id="technique-tags"></div>
+        <button class="amp-transform-btn" id="transform-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Transform Prompt
+        </button>
+      </div>
+    </div>
+
+    <!-- Prompt selector (for demo) -->
+    <div class="prompt-selector" id="prompt-selector">
+      <button class="prompt-chip active" data-prompt="0">Meal Plan</button>
+      <button class="prompt-chip" data-prompt="1">Board Presentation</button>
+    </div>
+
+    <!-- Input area -->
+    <div class="input-area">
+      <div class="input-box" id="input-box">
+        <span id="typed-text"></span><span class="cursor" id="cursor">|</span>
+      </div>
+      <button class="send-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Demo controls (hideable for clean recording) -->
+  <div class="demo-controls" id="demo-controls">
+    <span>Demo Controls:</span>
+    <button id="start-btn">Start Demo</button>
+    <button id="reset-btn" style="background:rgba(255,255,255,0.1)">Reset</button>
+    <button class="hide-controls-btn" id="hide-btn">Hide Bar</button>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const PROMPTS = [
+        {
+          trigger: 'write me a meal plan for losing weight',
+          techniques: ['Role Assignment', 'Specificity', 'Chain-of-Thought', 'Output Format', 'Constraints'],
+          transformed: `You are an expert registered dietitian with 15 years of clinical experience in evidence-based weight management.\n\nCreate a detailed 7-day meal plan for a 35-year-old sedentary adult (5'10", 185 lbs), targeting sustainable fat loss of 1-2 lbs/week.\n\nFirst, calculate the target daily calorie intake using the Mifflin-St Jeor equation with a 500-calorie deficit. Then design meals around that target.\n\nRequirements:\n- ~1,600-1,800 kcal/day, 40/30/30 macro split\n- 3 meals + 2 snacks per day\n- Budget: under $75/week\n- Flag batch-preppable meals\n\nOutput: structured table (Day | Meal | Dish | Calories | Protein) + grocery list by store section.\n\nNo supplements, juice cleanses, or extreme diets. All meals must be sustainable long-term.`,
+        },
+        {
+          trigger: 'make me a presentation about our q3 sales results for the board meeting',
+          techniques: ['Role Assignment', 'Context', 'Decomposition', 'Output Format', 'Chain-of-Thought', 'Constraints'],
+          transformed: `You are a senior strategy consultant who prepares executive presentations for Fortune 500 boards.\n\nCreate a 12-slide outline for a Q3 Sales Results presentation to our board of directors. The audience is non-operational executives who care about trends, risks, and strategic implications.\n\nStructure:\n1. Executive Summary (1 slide)\n2. Q3 KPIs vs Targets (2 slides)\n3. Segment Performance (2 slides)\n4. Competitive Landscape (1 slide)\n5. Pipeline & Leading Indicators (1 slide)\n6. Risks & Headwinds (1 slide)\n7. Strategic Recommendations (2 slides)\n8. Appendix (2 slides)\n\nFor each slide: title, 3-4 bullets, speaker notes, recommended visual (chart type + axis labels).\n\nThink about what a board member would ask after each slide.\n\nNo individual rep performance, internal jargon, or data without benchmarks. C-suite language only.\n\nQuality bar: McKinsey/Bain standard.`,
+        },
+      ];
+
+      let currentPromptIndex = 0;
+      let isRunning = false;
+
+      const typedEl = document.getElementById('typed-text');
+      const cursorEl = document.getElementById('cursor');
+      const inputBox = document.getElementById('input-box');
+      const popup = document.getElementById('popup');
+      const techniqueTags = document.getElementById('technique-tags');
+      const transformBtn = document.getElementById('transform-btn');
+      const startBtn = document.getElementById('start-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const hideBtn = document.getElementById('hide-btn');
+      const controls = document.getElementById('demo-controls');
+
+      // Prompt selector chips
+      document.querySelectorAll('.prompt-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.prompt-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          currentPromptIndex = parseInt(chip.dataset.prompt);
+          resetDemo();
+        });
+      });
+
+      startBtn.addEventListener('click', startDemo);
+      resetBtn.addEventListener('click', resetDemo);
+      hideBtn.addEventListener('click', () => {
+        controls.classList.add('hidden');
+      });
+
+      // Tap anywhere to show controls again
+      document.addEventListener('dblclick', () => {
+        controls.classList.remove('hidden');
+      });
+
+      transformBtn.addEventListener('click', () => {
+        if (isRunning) doTransform();
+      });
+
+      function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+      function resetDemo() {
+        isRunning = false;
+        typedEl.textContent = '';
+        cursorEl.style.display = '';
+        inputBox.classList.remove('underlined', 'sparkle');
+        popup.classList.add('popup-hidden');
+        popup.style.animation = '';
+      }
+
+      async function startDemo() {
+        if (isRunning) return;
+        isRunning = true;
+        resetDemo();
+        isRunning = true;
+
+        const prompt = PROMPTS[currentPromptIndex];
+        const trigger = prompt.trigger;
+
+        await sleep(500);
+
+        // Type trigger prompt
+        for (let i = 0; i < trigger.length; i++) {
+          if (!isRunning) return;
+          typedEl.textContent += trigger[i];
+          inputBox.scrollTop = inputBox.scrollHeight;
+          await sleep(45 + Math.random() * 25);
+        }
+
+        await sleep(500);
+
+        // Underline
+        inputBox.classList.add('underlined');
+        await sleep(400);
+
+        // Show popup with techniques
+        while (techniqueTags.firstChild) techniqueTags.removeChild(techniqueTags.firstChild);
+        prompt.techniques.forEach(t => {
+          const tag = document.createElement('span');
+          tag.className = 'amp-tag';
+          tag.textContent = t;
+          techniqueTags.appendChild(tag);
+        });
+
+        popup.classList.remove('popup-hidden');
+        popup.style.animation = 'none';
+        popup.offsetHeight;
+        popup.style.animation = 'slide-up 0.35s cubic-bezier(0.16,1,0.3,1) forwards';
+
+        // Wait for manual transform click or auto after 4s
+        await Promise.race([
+          new Promise(r => { transformBtn.addEventListener('click', r, { once: true }); }),
+          sleep(4000),
+        ]);
+
+        if (isRunning) doTransform();
+      }
+
+      async function doTransform() {
+        const prompt = PROMPTS[currentPromptIndex];
+
+        // Hide popup
+        popup.style.animation = 'slide-down 0.25s ease forwards';
+        await sleep(250);
+        popup.classList.add('popup-hidden');
+
+        // Clear input
+        inputBox.classList.remove('underlined');
+        typedEl.textContent = '';
+        cursorEl.style.display = 'none';
+        await sleep(250);
+
+        // Type transformed prompt
+        const text = prompt.transformed;
+        for (let i = 0; i < text.length; i++) {
+          if (!isRunning) return;
+          typedEl.textContent += text[i];
+          inputBox.scrollTop = inputBox.scrollHeight;
+          const ch = text[i];
+          await sleep(ch === '\n' ? 35 : ch === ' ' ? 3 : 7);
+        }
+
+        // Sparkle
+        inputBox.classList.add('sparkle');
+        await sleep(800);
+        inputBox.classList.remove('sparkle');
+
+        isRunning = false;
+      }
+    })();
+  </script>
+</body>
+</html>
