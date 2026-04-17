@@ -1,14 +1,10 @@
 import { supabase } from '../lib/supabase.js';
 import {
   validateEmail, sanitizeName, normalizeEmail,
-  generateAccessCode, generateVerificationToken,
-  checkRateLimit,
+  generateAccessCode, checkRateLimit,
 } from '../lib/validate.js';
-import { sendVerificationEmail } from '../lib/email.js';
 
-// If an Authorization: Bearer <token> header is present, verify it with the
-// Supabase service-role client and return the authenticated user (or null
-// if the token is invalid). Called before falling back to email-in-body.
+// Verify the Bearer token against Supabase. Returns the user or null.
 async function getAuthedUser(req) {
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
   if (!authHeader || typeof authHeader !== 'string') return null;
@@ -38,53 +34,44 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Prefer authenticated identity from Supabase OAuth session; fall back
-    // to email+name in the body for the legacy unauthenticated path.
+    // Authentication is required. The only way to join the waitlist is to
+    // sign in first (Google, GitHub, or email/password). The client then
+    // sends its Supabase access token in the Authorization header.
     const authed = await getAuthedUser(req);
-
-    let email;
-    let rawName;
-    let userId = null;
-    let emailPreVerified = false;
-
-    if (authed) {
-      // OAuth path — trust the token, ignore any spoofed body fields.
-      email = authed.email;
-      rawName = authed.user_metadata?.full_name || authed.user_metadata?.name || '';
-      userId = authed.id;
-      emailPreVerified = true;
-    } else {
-      const body = req.body || {};
-      email = body.email;
-      rawName = body.name;
+    if (!authed) {
+      return res.status(401).json({
+        success: false,
+        error: 'You must be signed in to join the waitlist.',
+      });
     }
 
+    const email = authed.email;
+    const rawName = req.body?.name
+      || authed.user_metadata?.full_name
+      || authed.user_metadata?.name
+      || '';
+    const userId = authed.id;
+
     if (!email || !validateEmail(email)) {
-      return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
+      return res.status(400).json({ success: false, error: 'Your account email is invalid.' });
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const sanitizedName = sanitizeName(rawName || '');
+    const sanitizedName = sanitizeName(rawName);
+    // Fall back to the email local-part when OAuth provider omits a name
+    // (GitHub without a public name, for example) — never block signup on this.
+    const finalName = sanitizedName || normalizedEmail.split('@')[0];
 
-    // Name is required for anonymous signups. OAuth signups may arrive
-    // without a name (GitHub often omits full_name) — in that case we fall
-    // back to the local-part of the email so the row still has a label.
-    if (!authed && !sanitizedName) {
-      return res.status(400).json({ success: false, error: 'Please enter your name.' });
-    }
-    const finalName = sanitizedName || (authed ? normalizedEmail.split('@')[0] : '');
-
-    // Check for existing user
+    // Already on the list? Return the existing row.
     const { data: existing } = await supabase
       .from('waitlist')
-      .select('id, email, name, access_code, position, email_verified, user_id')
+      .select('id, name, access_code, position, user_id')
       .eq('email', normalizedEmail)
-      .single();
+      .maybeSingle();
 
     if (existing) {
-      // Backfill user_id if this email was previously on the waitlist as
-      // anonymous and is now being claimed by an OAuth sign-in.
-      if (authed && !existing.user_id) {
+      // Backfill user_id if row pre-dates the auth requirement.
+      if (!existing.user_id) {
         await supabase
           .from('waitlist')
           .update({ user_id: userId, email_verified: true })
@@ -99,19 +86,14 @@ export default async function handler(req, res) {
       });
     }
 
-    // Get next position
+    // Compute next position from current row count.
     const { count } = await supabase
       .from('waitlist')
       .select('*', { count: 'exact', head: true });
 
     const position = (count || 0) + 1;
     const accessCode = generateAccessCode();
-    const verificationToken = emailPreVerified ? null : generateVerificationToken();
-    const verificationExpiresAt = emailPreVerified
-      ? null
-      : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
 
-    // Insert new user
     const { error: insertError } = await supabase
       .from('waitlist')
       .insert({
@@ -120,35 +102,18 @@ export default async function handler(req, res) {
         access_code: accessCode,
         position,
         user_id: userId,
-        email_verified: emailPreVerified,
-        verification_token: verificationToken,
-        verification_expires_at: verificationExpiresAt,
+        email_verified: true, // OAuth/email-confirmed — provider guarantees it
+        verification_token: null,
+        verification_expires_at: null,
       });
 
     if (insertError) {
-      // Handle race condition (duplicate email)
       if (insertError.code === '23505') {
-        return res.status(409).json({ success: false, error: 'This email is already on the waitlist.' });
+        // Race: another request from the same user landed first.
+        return res.status(409).json({ success: false, error: 'You are already on the waitlist.' });
       }
       console.error('Insert error:', insertError);
       return res.status(500).json({ success: false, error: 'Something went wrong. Please try again.' });
-    }
-
-    // Send verification email for anonymous signups only.
-    // OAuth signups skip this — the provider already verified the email.
-    if (!emailPreVerified) {
-      try {
-        await sendVerificationEmail({
-          email: normalizedEmail,
-          name: finalName,
-          token: verificationToken,
-          code: accessCode,
-          position,
-        });
-      } catch (emailErr) {
-        console.error('Email send error:', emailErr);
-        // Signup still succeeds even if email fails
-      }
     }
 
     return res.status(201).json({

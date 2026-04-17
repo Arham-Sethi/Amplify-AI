@@ -460,79 +460,15 @@ Output format: Weekly plan + grocery list.</code>
           </div>
         </div>
 
-        <div class="waitlist-auth" id="waitlist-auth-signup">
-          <div class="auth-card glass-card">
-            <h3>Get your spot</h3>
-            <p style="text-align:center;color:#7a6555;font-size:14px;margin:0 0 16px;">
-              <a href="/login?next=/waitlist-confirm" class="link-btn">Sign in with Google or GitHub &rarr;</a>
-              <br><span style="color:#a8977f;font-size:12px;">or enter your email below</span>
-            </p>
-            <form id="waitlist-signup-form">
-              <div class="form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;tab-index:-1;">
-                <label for="signup-website">Website</label>
-                <input type="text" id="signup-website" name="website" tabindex="-1" autocomplete="off">
-              </div>
-              <div class="form-field">
-                <label for="signup-email">Email</label>
-                <input type="email" id="signup-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
-              </div>
-              <div class="form-field">
-                <label for="signup-name">Name</label>
-                <input type="text" id="signup-name" placeholder="Your name" required minlength="1" maxlength="100" autocomplete="name">
-              </div>
-              <input type="hidden" id="signup-ts" value="">
-              <button type="submit" class="btn btn-primary btn-lg btn-block">Join Waitlist</button>
-            </form>
-            <p class="auth-footer">Already signed up? <button class="link-btn" id="show-check-btn">Check your position</button></p>
-          </div>
-        </div>
-
-        <div class="waitlist-auth" id="waitlist-auth-check" style="display:none;">
-          <div class="auth-card glass-card">
-            <h3>Check your position</h3>
-            <form id="waitlist-check-form">
-              <div class="form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;tab-index:-1;">
-                <label for="check-phone">Phone</label>
-                <input type="text" id="check-phone" name="phone" tabindex="-1" autocomplete="off">
-              </div>
-              <div class="form-field">
-                <label for="check-email">Email</label>
-                <input type="email" id="check-email" placeholder="you@email.com" required maxlength="254">
-              </div>
-              <div class="form-field">
-                <label for="check-code">Access Code</label>
-                <input type="text" id="check-code" placeholder="AMP-XXXXXX" required maxlength="10" autocomplete="off" spellcheck="false">
-              </div>
-              <input type="hidden" id="check-ts" value="">
-              <button type="submit" class="btn btn-primary btn-lg btn-block">Check Position</button>
-            </form>
-            <p class="auth-footer">New here? <button class="link-btn" id="show-signup-btn">Join the waitlist</button></p>
-          </div>
-        </div>
-
-        <div class="waitlist-auth" id="waitlist-dashboard" style="display:none;">
-          <div class="auth-card glass-card dashboard-card">
-            <div class="dashboard-header">
-              <div class="success-check">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2d8f4e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
-              </div>
-              <h3>You're in, <span id="dash-name">there</span>!</h3>
+        <!-- Single auth-aware waitlist card. script.js populates this based on
+             the current Supabase session. States: loading → signed-out CTA →
+             signed-in (not joined) → signed-in (joined: position + code). -->
+        <div class="waitlist-auth" id="waitlist-auth">
+          <div class="auth-card glass-card" id="waitlist-card">
+            <div id="waitlist-card-body">
+              <p style="text-align:center;color:#7a6555;font-size:14px;margin:0;">Loading your status&hellip;</p>
             </div>
-            <div class="dashboard-stats">
-              <div class="dash-stat">
-                <span class="dash-stat-num" id="dash-position">--</span>
-                <span class="dash-stat-label">Your Position</span>
-              </div>
-            </div>
-            <div class="dash-section">
-              <h4>Your Access Code</h4>
-              <p class="dash-hint">Save this to check your position later</p>
-              <div class="code-display">
-                <code id="dash-code">AMP-XXXXXX</code>
-                <button class="btn btn-sm btn-ghost copy-btn" data-copy="dash-code">Copy</button>
-              </div>
-            </div>
-            <button class="btn btn-ghost btn-sm" id="dash-logout">Sign Out</button>
+            <p id="waitlist-error" class="form-error" style="display:none;color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
           </div>
         </div>
       </div>

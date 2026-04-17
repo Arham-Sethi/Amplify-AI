@@ -418,28 +418,11 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     }
 
     document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
+      btn.addEventListener('click', (e) => {
         e.preventDefault();
-        // Decision tree: "Join Waitlist" on the waitlist tab funnels
-        // logged-out visitors through the login page first. If they're
-        // already signed in (either via Supabase OAuth or a local
-        // check-position session), the regular tab behaviour applies.
-        if (btn.dataset.tab === 'waitlist') {
-          try {
-            const hasLocal = !!getSession();
-            let hasOAuth = false;
-            if (window.__amplifyAuth?.getSession) {
-              const s = await window.__amplifyAuth.getSession();
-              hasOAuth = !!s;
-            }
-            if (!hasLocal && !hasOAuth) {
-              window.location.href = '/login?next=' + encodeURIComponent('/waitlist-confirm');
-              return;
-            }
-          } catch {
-            // If auth probe fails, fall through to normal tab behaviour.
-          }
-        }
+        // Auth state for the waitlist tab is handled reactively inside
+        // setupWaitlist — the card renders the right CTA based on the
+        // Supabase session, so we always let the tab switch happen.
         switchTab(btn.dataset.tab);
       });
     });
@@ -463,90 +446,9 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
   // Rate Limiting, Session Management, Abuse Prevention
   // =============================================
 
-  // --- INPUT VALIDATION ---
-  const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  const CODE_REGEX = /^AMP-[A-Z2-9]{6}$/;
-  const MAX_EMAIL_LENGTH = 254;
-  const MAX_NAME_LENGTH = 100;
-
-  function validateEmail(email) {
-    return typeof email === 'string' &&
-      email.length > 0 &&
-      email.length <= MAX_EMAIL_LENGTH &&
-      EMAIL_REGEX.test(email);
-  }
-
-  function sanitizeName(name) {
-    if (typeof name !== 'string') return '';
-    return name.replace(/<[^>]*>/g, '').replace(/[^\w\s\-'.]/g, '').trim().substring(0, MAX_NAME_LENGTH);
-  }
-
-  function validateCode(code) {
-    return typeof code === 'string' && CODE_REGEX.test(code);
-  }
-
-  // --- CRYPTOGRAPHICALLY SECURE CODE GENERATION ---
-  // --- BOT DETECTION ---
-  const botDetector = {
-    // Track human interaction signals
-    humanSignals: {
-      mouseMovements: 0,
-      keystrokes: 0,
-      scrolls: 0,
-      touchEvents: 0,
-      focusChanges: 0,
-    },
-
-    init() {
-      document.addEventListener('mousemove', () => { this.humanSignals.mouseMovements++; }, { passive: true });
-      document.addEventListener('keydown', () => { this.humanSignals.keystrokes++; }, { passive: true });
-      document.addEventListener('scroll', () => { this.humanSignals.scrolls++; }, { passive: true });
-      document.addEventListener('touchstart', () => { this.humanSignals.touchEvents++; }, { passive: true });
-      document.addEventListener('focusin', () => { this.humanSignals.focusChanges++; }, { passive: true });
-    },
-
-    // Check if submission looks like a bot
-    isBot(formId) {
-      const reasons = [];
-
-      // 1. Honeypot check — if hidden field has a value, it's a bot
-      const honeypotIds = { 'waitlist-signup-form': 'signup-website', 'waitlist-check-form': 'check-phone' };
-      const honeypotEl = $(honeypotIds[formId]);
-      if (honeypotEl && honeypotEl.value.length > 0) {
-        reasons.push('honeypot_filled');
-      }
-
-      // 2. Submission speed check — forms submitted under 1.5s are suspicious
-      const tsIds = { 'waitlist-signup-form': 'signup-ts', 'waitlist-check-form': 'check-ts' };
-      const tsEl = $(tsIds[formId]);
-      if (tsEl && tsEl.value) {
-        const elapsed = Date.now() - parseInt(tsEl.value, 10);
-        if (elapsed < 1500) reasons.push('too_fast');
-      }
-
-      // 3. Zero human interaction signals — bots don't move mice or type
-      const s = this.humanSignals;
-      const totalSignals = s.mouseMovements + s.keystrokes + s.scrolls + s.touchEvents + s.focusChanges;
-      if (totalSignals < 2) reasons.push('no_interaction');
-
-      // 4. WebDriver / headless browser detection
-      if (navigator.webdriver) reasons.push('webdriver');
-
-      // 5. Missing standard browser APIs (headless indicators)
-      if (!window.chrome && !navigator.userAgent.includes('Firefox') && !navigator.userAgent.includes('Safari')) {
-        reasons.push('suspicious_ua');
-      }
-
-      return { isBot: reasons.length >= 2, reasons };
-    },
-
-    // Set timestamp when form becomes visible/focused
-    stampForm(formId) {
-      const tsIds = { 'waitlist-signup-form': 'signup-ts', 'waitlist-check-form': 'check-ts' };
-      const el = $(tsIds[formId]);
-      if (el) el.value = String(Date.now());
-    },
-  };
+  // Input validation lives server-side now — the auth-gated waitlist flow
+  // derives email from the verified OAuth token in /api/signup, so the
+  // client no longer handles user-typed credentials.
 
   // --- RATE LIMITING (Progressive with exponential backoff) ---
   const rateLimiter = {
@@ -602,39 +504,11 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     },
   };
 
-  // --- SESSION MANAGEMENT ---
-  const SESSION_KEY = 'amplify_session';
-  const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-
-  function createSession(userData) {
-    const session = {
-      id: crypto.randomUUID(),
-      user: userData, // { name, code, position }
-      createdAt: Date.now(),
-      expiresAt: Date.now() + SESSION_TTL_MS,
-    };
-    try { localStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch {}
-    return session;
-  }
-
-  function getSession() {
-    try {
-      const raw = localStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      const session = JSON.parse(raw);
-      if (!session.expiresAt || Date.now() > session.expiresAt) {
-        localStorage.removeItem(SESSION_KEY);
-        return null;
-      }
-      return session;
-    } catch {
-      return null;
-    }
-  }
-
-  function destroySession() {
-    try { localStorage.removeItem(SESSION_KEY); } catch {}
-  }
+  // --- LEGACY SESSION CLEANUP ---
+  // The old localStorage session (pre-auth waitlist) is replaced by Supabase.
+  // Clear any leftover value so a visitor who joined before auth existed
+  // doesn't see a stale "logged in" state clashing with Supabase.
+  try { localStorage.removeItem('amplify_session'); } catch {}
 
   // --- WAITLIST API ---
   async function updateCounter() {
@@ -650,18 +524,6 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     } catch {
       // Silently fail — counter stays at current value
     }
-  }
-
-  // --- UI ERROR DISPLAY ---
-  function showFormError(formEl, message) {
-    const existing = formEl.querySelector('.form-error');
-    if (existing) existing.remove();
-    const errorEl = document.createElement('p');
-    errorEl.className = 'form-error';
-    errorEl.textContent = message;
-    errorEl.style.cssText = 'color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;';
-    formEl.appendChild(errorEl);
-    setTimeout(() => errorEl.remove(), 5000);
   }
 
   function disableButton(btn, seconds) {
@@ -685,209 +547,248 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     tick();
   }
 
-  // --- WAITLIST SETUP ---
+  // --- WAITLIST SETUP (auth-gated, reactive to Supabase session) ---
+  //
+  // Renders one of three states into #waitlist-card-body:
+  //   1. Signed out → "Sign in to join the waitlist" CTA
+  //   2. Signed in, not on list → "Join the Waitlist" button (Bearer token)
+  //   3. Signed in, already on list → position + access code display
   function setupWaitlist() {
-    const signupSection = $('waitlist-auth-signup');
-    const checkSection = $('waitlist-auth-check');
-    const dashboard = $('waitlist-dashboard');
+    const card = $('waitlist-card-body');
+    const errorEl = $('waitlist-error');
+    if (!card) return;
 
-    // Initialize bot detection
-    botDetector.init();
+    const showError = (msg) => {
+      if (!errorEl) return;
+      errorEl.textContent = msg;
+      errorEl.style.display = '';
+      setTimeout(() => { errorEl.style.display = 'none'; errorEl.textContent = ''; }, 5000);
+    };
 
-    // Stamp forms when they become visible
-    botDetector.stampForm('waitlist-signup-form');
+    const clearError = () => {
+      if (!errorEl) return;
+      errorEl.style.display = 'none';
+      errorEl.textContent = '';
+    };
 
-    $('show-check-btn')?.addEventListener('click', () => {
-      signupSection.style.display = 'none';
-      checkSection.style.display = '';
-      botDetector.stampForm('waitlist-check-form');
-    });
-    $('show-signup-btn')?.addEventListener('click', () => {
-      checkSection.style.display = 'none';
-      signupSection.style.display = '';
-      botDetector.stampForm('waitlist-signup-form');
-    });
-    $('dash-logout')?.addEventListener('click', () => {
-      destroySession();
-      dashboard.style.display = 'none';
-      signupSection.style.display = '';
-    });
+    // Render logged-out state
+    const renderSignedOut = () => {
+      while (card.firstChild) card.removeChild(card.firstChild);
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;';
 
-    // --- SIGNUP HANDLER ---
-    $('waitlist-signup-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
+      const heading = document.createElement('h3');
+      heading.textContent = 'Join the Waitlist';
+      heading.style.cssText = 'margin:0;font-size:22px;color:#2d2620;';
 
-      // Bot detection
-      const botCheck = botDetector.isBot('waitlist-signup-form');
-      if (botCheck.isBot) {
-        rateLimiter.logAttempt('signup', 'bot_blocked', { reasons: botCheck.reasons });
-        showFormError(form, 'Something went wrong. Please refresh and try again.');
-        return;
-      }
+      const sub = document.createElement('p');
+      sub.textContent = 'Sign in to reserve your spot. We use Google or GitHub (or email) for secure, one-click access.';
+      sub.style.cssText = 'margin:0;color:#7a6555;font-size:14px;line-height:1.5;max-width:420px;';
 
-      // Rate limit: 5 signups per hour
-      const rateCheck = rateLimiter.check('signup', 5, 60 * 60 * 1000);
-      if (!rateCheck.allowed) {
-        rateLimiter.logAttempt('signup', 'rate_limited', { retryAfter: rateCheck.retryAfter });
-        showFormError(form, 'Too many attempts. Please try again later.');
-        if (submitBtn) disableButton(submitBtn, rateCheck.retryAfter);
-        return;
-      }
+      const cta = document.createElement('a');
+      cta.href = '/login?next=' + encodeURIComponent('/waitlist-confirm');
+      cta.textContent = 'Sign in to join';
+      cta.className = 'btn-primary';
+      cta.style.cssText = 'display:inline-block;padding:12px 28px;text-decoration:none;';
 
-      const rawEmail = $('signup-email').value.trim().toLowerCase();
-      const rawName = $('signup-name').value;
+      wrap.appendChild(heading);
+      wrap.appendChild(sub);
+      wrap.appendChild(cta);
+      card.appendChild(wrap);
+    };
 
-      if (!validateEmail(rawEmail)) {
-        showFormError(form, 'Please enter a valid email address.');
-        return;
-      }
-      if (!sanitizeName(rawName)) {
-        showFormError(form, 'Please enter your name.');
-        return;
-      }
+    // Render signed-in, not yet on waitlist
+    const renderNeedsJoin = (user) => {
+      while (card.firstChild) card.removeChild(card.firstChild);
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;';
 
-      // Disable button while request is in flight
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Joining...';
-      }
+      const heading = document.createElement('h3');
+      heading.textContent = "You're signed in";
+      heading.style.cssText = 'margin:0;font-size:22px;color:#2d2620;';
 
-      try {
-        const res = await fetch('/api/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: rawEmail, name: rawName }),
-        });
-        const data = await res.json();
+      const sub = document.createElement('p');
+      sub.textContent = `Signed in as ${user.email}. Claim your spot on the waitlist.`;
+      sub.style.cssText = 'margin:0;color:#7a6555;font-size:14px;line-height:1.5;';
 
-        if (!data.success) {
-          showFormError(form, data.error || 'Something went wrong. Please try again.');
-          return;
-        }
+      const joinBtn = document.createElement('button');
+      joinBtn.type = 'button';
+      joinBtn.textContent = 'Join the Waitlist';
+      joinBtn.className = 'btn-primary';
+      joinBtn.style.cssText = 'padding:12px 28px;cursor:pointer;';
 
-        const userData = { name: data.name, code: data.code, position: data.position };
-        createSession(userData);
-        rateLimiter.logAttempt('signup', data.existing ? 'existing_user_login' : 'new_user', {});
-        updateCounter();
-        showDashboard(userData);
-      } catch {
-        showFormError(form, 'Network error. Please check your connection and try again.');
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Join Waitlist';
-        }
-      }
-    });
-
-    // --- CHECK POSITION HANDLER ---
-    $('waitlist-check-form')?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const submitBtn = form.querySelector('button[type="submit"]');
-
-      // Bot detection
-      const botCheck = botDetector.isBot('waitlist-check-form');
-      if (botCheck.isBot) {
-        rateLimiter.logAttempt('check', 'bot_blocked', { reasons: botCheck.reasons });
-        showFormError(form, 'Something went wrong. Please refresh and try again.');
-        return;
-      }
-
-      // Rate limit: 10 checks per hour (brute-force protection)
-      const rateCheck = rateLimiter.check('check', 10, 60 * 60 * 1000);
-      if (!rateCheck.allowed) {
-        rateLimiter.logAttempt('check', 'rate_limited', { retryAfter: rateCheck.retryAfter });
-        showFormError(form, 'Too many attempts. Please try again later.');
-        if (submitBtn) disableButton(submitBtn, rateCheck.retryAfter);
-        return;
-      }
-
-      const rawEmail = $('check-email').value.trim().toLowerCase();
-      const rawCode = $('check-code').value.trim().toUpperCase();
-
-      if (!validateEmail(rawEmail)) {
-        showFormError(form, 'Please enter a valid email address.');
-        return;
-      }
-      if (!validateCode(rawCode)) {
-        showFormError(form, 'Invalid access code format. Expected: AMP-XXXXXX');
-        return;
-      }
-
-      if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Checking...';
-      }
-
-      try {
-        const res = await fetch('/api/check', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: rawEmail, code: rawCode }),
-        });
-        const data = await res.json();
-
-        if (!data.success) {
-          rateLimiter.logAttempt('check', 'failed', {});
-          showFormError(form, data.error || 'No matching account found.');
-          return;
-        }
-
-        const userData = { name: data.name, code: data.code, position: data.position };
-        createSession(userData);
-        rateLimiter.logAttempt('check', 'success', {});
-        showDashboard(userData);
-      } catch {
-        showFormError(form, 'Network error. Please check your connection and try again.');
-      } finally {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Check Position';
-        }
-      }
-    });
-
-    // --- AUTO-LOGIN from session ---
-    const session = getSession();
-    if (session && session.user) {
-      showDashboard(session.user);
-    }
-
-    // --- COPY BUTTON ---
-    document.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.addEventListener('click', async () => {
-        const src = $(btn.dataset.copy);
-        const text = src?.value || src?.textContent || '';
+      const signoutLink = document.createElement('a');
+      signoutLink.href = '#';
+      signoutLink.textContent = 'Sign out';
+      signoutLink.style.cssText = 'color:#7a6555;font-size:13px;text-decoration:underline;';
+      signoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
         try {
-          await navigator.clipboard.writeText(text);
-        } catch {
-          const t = document.createElement('textarea');
-          t.value = text;
-          t.style.cssText = 'position:fixed;left:-9999px;top:-9999px;';
-          document.body.appendChild(t);
-          t.select();
-          document.execCommand('copy');
-          document.body.removeChild(t);
-        }
-        const orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = orig; }, 1500);
+          const mod = await import('/js/supabase-client.js');
+          await mod.signOut();
+        } catch {}
       });
-    });
 
+      joinBtn.addEventListener('click', async () => {
+        clearError();
+        // Rate limit: 5 joins per hour per browser
+        const rateCheck = rateLimiter.check('signup', 5, 60 * 60 * 1000);
+        if (!rateCheck.allowed) {
+          rateLimiter.logAttempt('signup', 'rate_limited', { retryAfter: rateCheck.retryAfter });
+          showError('Too many attempts. Please try again later.');
+          disableButton(joinBtn, rateCheck.retryAfter);
+          return;
+        }
+
+        joinBtn.disabled = true;
+        const origText = joinBtn.textContent;
+        joinBtn.textContent = 'Joining...';
+        try {
+          const mod = await import('/js/supabase-client.js');
+          const session = await mod.getSession();
+          if (!session) {
+            showError('Your session expired. Please sign in again.');
+            renderSignedOut();
+            return;
+          }
+          const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({}),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            showError(data.error || 'Something went wrong. Please try again.');
+            joinBtn.disabled = false;
+            joinBtn.textContent = origText;
+            return;
+          }
+          updateCounter();
+          renderOnList({
+            name: data.name,
+            code: data.code,
+            position: data.position,
+            email: user.email,
+          });
+        } catch {
+          showError('Network error. Please check your connection and try again.');
+          joinBtn.disabled = false;
+          joinBtn.textContent = origText;
+        }
+      });
+
+      wrap.appendChild(heading);
+      wrap.appendChild(sub);
+      wrap.appendChild(joinBtn);
+      wrap.appendChild(signoutLink);
+      card.appendChild(wrap);
+    };
+
+    // Render signed-in, on waitlist
+    const renderOnList = (entry) => {
+      while (card.firstChild) card.removeChild(card.firstChild);
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'text-align:center;display:flex;flex-direction:column;gap:14px;align-items:center;';
+
+      const heading = document.createElement('h3');
+      heading.textContent = `You're on the list, ${entry.name || 'there'}!`;
+      heading.style.cssText = 'margin:0;font-size:22px;color:#2d2620;';
+
+      const posBadge = document.createElement('div');
+      posBadge.textContent = `#${entry.position}`;
+      posBadge.style.cssText = 'font-size:42px;font-weight:700;color:#c47a3a;margin:4px 0;';
+
+      const posLabel = document.createElement('p');
+      posLabel.textContent = 'Your position on the waitlist';
+      posLabel.style.cssText = 'margin:0;color:#7a6555;font-size:13px;';
+
+      const codeRow = document.createElement('div');
+      codeRow.style.cssText = 'display:flex;align-items:center;gap:8px;margin-top:8px;background:rgba(196,122,58,0.08);padding:10px 16px;border-radius:10px;';
+      const codeLabel = document.createElement('span');
+      codeLabel.textContent = 'Access code:';
+      codeLabel.style.cssText = 'color:#7a6555;font-size:13px;';
+      const codeVal = document.createElement('code');
+      codeVal.textContent = entry.code;
+      codeVal.style.cssText = 'font-family:monospace;font-weight:700;color:#2d2620;font-size:14px;';
+      codeRow.appendChild(codeLabel);
+      codeRow.appendChild(codeVal);
+
+      const emailLine = document.createElement('p');
+      emailLine.textContent = `Signed in as ${entry.email}`;
+      emailLine.style.cssText = 'margin:8px 0 0;color:#7a6555;font-size:12px;';
+
+      const signoutLink = document.createElement('a');
+      signoutLink.href = '#';
+      signoutLink.textContent = 'Sign out';
+      signoutLink.style.cssText = 'color:#7a6555;font-size:13px;text-decoration:underline;margin-top:4px;';
+      signoutLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          const mod = await import('/js/supabase-client.js');
+          await mod.signOut();
+        } catch {}
+      });
+
+      wrap.appendChild(heading);
+      wrap.appendChild(posBadge);
+      wrap.appendChild(posLabel);
+      wrap.appendChild(codeRow);
+      wrap.appendChild(emailLine);
+      wrap.appendChild(signoutLink);
+      card.appendChild(wrap);
+    };
+
+    // Main state resolver — reads Supabase session + waitlist row via RLS
+    const resolveState = async () => {
+      clearError();
+      try {
+        const mod = await import('/js/supabase-client.js');
+        const session = await mod.getSession();
+        if (!session) {
+          renderSignedOut();
+          return;
+        }
+        const user = session.user;
+        const client = mod.getSupabase();
+        // RLS policy `users_can_read_own_waitlist_row` lets the user read
+        // ONLY their own row via the anon key.
+        const { data: row } = await client
+          .from('waitlist')
+          .select('name, access_code, position')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (row) {
+          renderOnList({
+            name: row.name,
+            code: row.access_code,
+            position: row.position,
+            email: user.email,
+          });
+        } else {
+          renderNeedsJoin(user);
+        }
+      } catch {
+        // If the Supabase client fails to load, fall back to signed-out
+        // UI — the user can still reach /login manually.
+        renderSignedOut();
+      }
+    };
+
+    // Re-render whenever Supabase auth state changes (sign-in, sign-out,
+    // token refresh) so the card stays in sync with the nav.
+    (async () => {
+      try {
+        const mod = await import('/js/supabase-client.js');
+        if (mod.onAuthChanged) mod.onAuthChanged(() => resolveState());
+      } catch {}
+    })();
+
+    resolveState();
     updateCounter();
-  }
-
-  function showDashboard(user) {
-    $('waitlist-auth-signup').style.display = 'none';
-    $('waitlist-auth-check').style.display = 'none';
-    $('waitlist-dashboard').style.display = '';
-    $('dash-name').textContent = user.name || 'there';
-    $('dash-code').textContent = user.code;
-    $('dash-position').textContent = `#${user.position}`;
   }
 
   // --- SCROLL ANIMATIONS ---
@@ -1083,70 +984,34 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     window.addEventListener('scroll', check, { passive: true });
   }
 
-  // --- INIT ---
-  // --- EMAIL VERIFICATION BANNER ---
-  function handleVerificationRedirect() {
-    const params = new URLSearchParams(window.location.search);
-    const verified = params.get('verified');
-    if (!verified) return;
-
-    const messages = {
-      success: { text: 'Email verified! Your spot is secured.', type: 'success' },
-      already: { text: 'Your email was already verified.', type: 'info' },
-      expired: { text: 'Verification link expired. Please sign up again.', type: 'error' },
-      invalid: { text: 'Invalid verification link.', type: 'error' },
-      error: { text: 'Verification failed. Please try again.', type: 'error' },
+  // --- OAUTH SESSION NAV SWAP (reactive) ---
+  // Subscribes to Supabase auth state so the nav swaps "Sign in" ↔ "Account"
+  // immediately on sign-in/sign-out without a page reload. Supabase is the
+  // single source of truth — no localStorage session to conflict with it.
+  async function setupOAuthNav() {
+    const signinBtn = $('nav-signin');
+    const accountBtn = $('nav-account');
+    const applyState = (session) => {
+      if (session) {
+        if (signinBtn) signinBtn.style.display = 'none';
+        if (accountBtn) accountBtn.style.display = '';
+      } else {
+        if (signinBtn) signinBtn.style.display = '';
+        if (accountBtn) accountBtn.style.display = 'none';
+      }
     };
 
-    const msg = messages[verified];
-    if (!msg) return;
-
-    const banner = document.createElement('div');
-    banner.className = 'verify-banner verify-banner-' + msg.type;
-    banner.textContent = msg.text;
-    banner.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:1001;'
-      + 'padding:12px 24px;border-radius:10px;font-size:14px;font-weight:600;'
-      + 'box-shadow:0 4px 20px rgba(0,0,0,0.1);animation:fadeInDown 0.4s ease;';
-
-    if (msg.type === 'success') {
-      banner.style.background = '#ecfdf5';
-      banner.style.color = '#166534';
-      banner.style.border = '1px solid #bbf7d0';
-    } else if (msg.type === 'info') {
-      banner.style.background = '#f0f9ff';
-      banner.style.color = '#1e40af';
-      banner.style.border = '1px solid #bfdbfe';
-    } else {
-      banner.style.background = '#fef2f2';
-      banner.style.color = '#991b1b';
-      banner.style.border = '1px solid #fecaca';
-    }
-
-    document.body.appendChild(banner);
-    setTimeout(() => { banner.style.opacity = '0'; banner.style.transition = 'opacity 0.4s'; }, 5000);
-    setTimeout(() => banner.remove(), 5500);
-
-    // Clean URL without reload
-    window.history.replaceState({}, '', window.location.pathname);
-  }
-
-  // --- OAUTH SESSION NAV SWAP ---
-  // Loads the Supabase client lazily so the rest of the page never waits on it.
-  // When a Supabase session exists, swap the "Sign in" button for "Account".
-  async function setupOAuthNav() {
     try {
       const mod = await import('/js/supabase-client.js');
       window.__amplifyAuth = mod;
       const session = await mod.getSession();
-      const signinBtn = $('nav-signin');
-      const accountBtn = $('nav-account');
-      if (session) {
-        if (signinBtn) signinBtn.style.display = 'none';
-        if (accountBtn) accountBtn.style.display = '';
+      applyState(session);
+      if (mod.onAuthChanged) {
+        mod.onAuthChanged((s) => applyState(s));
       }
     } catch {
-      // Supabase client couldn't load (e.g. offline / missing config) —
-      // fall back to showing the Sign-in button, which is the default.
+      // Supabase client couldn't load — default to showing "Sign in".
+      applyState(null);
     }
   }
 
@@ -1163,7 +1028,6 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     setupCompareSlider();
     setupNavScroll();
     setupFloatingCTA();
-    handleVerificationRedirect();
 
     const homeTab = $('tab-home');
     if (homeTab?.classList.contains('active')) {
