@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign in — Amplify AI</title>
-  <meta name="description" content="Sign in to Amplify with Google or GitHub.">
+  <meta name="description" content="Sign in to Amplify with Google, GitHub, or email.">
 
   <!-- Security Headers -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
@@ -17,6 +17,42 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Login-page-scoped styles: OAuth buttons with logos + email divider. */
+    .oauth-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .oauth-btn svg { flex-shrink: 0; }
+    .oauth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0 16px;
+      color: #a8977f;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .oauth-divider::before,
+    .oauth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(60,43,31,0.12);
+    }
+    .mode-switch {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #7a6555;
+    }
+  </style>
 </head>
 <body>
   <nav class="nav">
@@ -32,24 +68,50 @@
     <section class="waitlist-page">
       <div class="container">
         <div class="waitlist-hero">
-          <h1 class="section-title">Sign in to <span class="accent gradient-text">Amplify</span></h1>
-          <p class="section-sub">Create your account or sign in to manage your spot.</p>
+          <h1 class="section-title" id="page-heading">Sign in to <span class="accent gradient-text">Amplify</span></h1>
+          <p class="section-sub" id="page-sub">Create your account or sign in to manage your spot.</p>
         </div>
 
         <div class="waitlist-auth">
           <div class="auth-card glass-card">
-            <h3>Continue with</h3>
-            <button type="button" id="btn-google" class="btn btn-primary btn-lg btn-block" style="margin-bottom:12px;">
-              Continue with Google
+            <button type="button" id="btn-google" class="btn btn-ghost btn-lg oauth-btn">
+              <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+              <span>Continue with Google</span>
             </button>
-            <button type="button" id="btn-github" class="btn btn-ghost btn-lg btn-block">
-              Continue with GitHub
+            <button type="button" id="btn-github" class="btn btn-ghost btn-lg oauth-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="#1a1a1a" aria-hidden="true">
+                <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+              </svg>
+              <span>Continue with GitHub</span>
             </button>
+
+            <div class="oauth-divider">or</div>
+
+            <form id="email-form" autocomplete="on">
+              <div class="form-field">
+                <label for="login-email">Email</label>
+                <input type="email" id="login-email" placeholder="you@email.com" required maxlength="254" autocomplete="email">
+              </div>
+              <div class="form-field">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="Min 8 characters" required minlength="8" maxlength="128" autocomplete="current-password">
+              </div>
+              <button type="submit" id="email-submit" class="btn btn-primary btn-lg btn-block">Sign in</button>
+            </form>
+
             <p id="login-error" class="form-error" style="display:none;color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
-            <p class="auth-footer" style="margin-top:20px;">
-              Already have an access code? <a href="/#waitlist" class="link-btn">Check your position</a>
+            <p id="login-success" class="form-error" style="display:none;color:#166534;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
+
+            <p class="mode-switch">
+              <span id="mode-prompt">New to Amplify?</span>
+              <button type="button" class="link-btn" id="mode-toggle">Create an account</button>
             </p>
-            <p class="auth-footer">
+            <p class="auth-footer" style="margin-top:16px;">
               <a href="/" class="link-btn">&larr; Back to home</a>
             </p>
           </div>
@@ -59,7 +121,11 @@
   </main>
 
   <script type="module">
-    import { signInWithProvider } from '/js/supabase-client.js';
+    import {
+      signInWithProvider,
+      signInWithEmail,
+      signUpWithEmail,
+    } from '/js/supabase-client.js';
 
     const params = new URLSearchParams(window.location.search);
     const next = params.get('next') || '/account';
@@ -67,13 +133,57 @@
     const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
 
     const errorEl = document.getElementById('login-error');
+    const successEl = document.getElementById('login-success');
+    const submitBtn = document.getElementById('email-submit');
+    const passwordInput = document.getElementById('login-password');
+    const modePrompt = document.getElementById('mode-prompt');
+    const modeToggle = document.getElementById('mode-toggle');
+    const heading = document.getElementById('page-heading');
+    const sub = document.getElementById('page-sub');
+
+    let mode = 'signin'; // or 'signup'
+
+    function clearMessages() {
+      errorEl.style.display = 'none';
+      successEl.style.display = 'none';
+    }
     function showError(msg) {
+      clearMessages();
       errorEl.textContent = msg;
       errorEl.style.display = '';
     }
+    function showSuccess(msg) {
+      clearMessages();
+      successEl.textContent = msg;
+      successEl.style.display = '';
+    }
 
-    async function handleSignIn(provider) {
-      errorEl.style.display = 'none';
+    function applyMode() {
+      if (mode === 'signin') {
+        heading.innerHTML = 'Sign in to <span class="accent gradient-text">Amplify</span>';
+        sub.textContent = 'Welcome back — enter your details below.';
+        submitBtn.textContent = 'Sign in';
+        passwordInput.autocomplete = 'current-password';
+        modePrompt.textContent = 'New to Amplify?';
+        modeToggle.textContent = 'Create an account';
+      } else {
+        heading.innerHTML = 'Create your <span class="accent gradient-text">Amplify</span> account';
+        sub.textContent = 'Sign up with email to join the waitlist.';
+        submitBtn.textContent = 'Create account';
+        passwordInput.autocomplete = 'new-password';
+        modePrompt.textContent = 'Already have an account?';
+        modeToggle.textContent = 'Sign in';
+      }
+      clearMessages();
+    }
+
+    modeToggle.addEventListener('click', () => {
+      mode = mode === 'signin' ? 'signup' : 'signin';
+      applyMode();
+    });
+
+    async function handleOAuth(provider) {
+      clearMessages();
       try {
         const { error } = await signInWithProvider(provider, safeNext);
         if (error) showError(error.message || 'Sign-in failed. Please try again.');
@@ -82,8 +192,57 @@
       }
     }
 
-    document.getElementById('btn-google').addEventListener('click', () => handleSignIn('google'));
-    document.getElementById('btn-github').addEventListener('click', () => handleSignIn('github'));
+    document.getElementById('btn-google').addEventListener('click', () => handleOAuth('google'));
+    document.getElementById('btn-github').addEventListener('click', () => handleOAuth('github'));
+
+    document.getElementById('email-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearMessages();
+
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const password = passwordInput.value;
+
+      if (!email || !password) {
+        showError('Please enter your email and password.');
+        return;
+      }
+
+      const origLabel = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = mode === 'signin' ? 'Signing in...' : 'Creating account...';
+
+      try {
+        if (mode === 'signin') {
+          const { data, error } = await signInWithEmail(email, password);
+          if (error) {
+            showError(error.message || 'Invalid email or password.');
+            return;
+          }
+          if (data?.session) window.location.replace(safeNext);
+          else showError('Sign-in succeeded but no session was created. Please try again.');
+        } else {
+          const { data, error } = await signUpWithEmail(email, password, safeNext);
+          if (error) {
+            showError(error.message || 'Could not create account.');
+            return;
+          }
+          if (data?.session) {
+            // Email confirmation disabled — go straight in.
+            window.location.replace(safeNext);
+          } else {
+            // Email confirmation required — user must click the link.
+            showSuccess('Check your email to confirm your account, then sign in.');
+            mode = 'signin';
+            applyMode();
+          }
+        }
+      } catch (err) {
+        showError('Network error. Please check your connection and try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = origLabel;
+      }
+    });
   </script>
 </body>
 </html>

@@ -743,6 +743,10 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
         showFormError(form, 'Please enter a valid email address.');
         return;
       }
+      if (!sanitizeName(rawName)) {
+        showFormError(form, 'Please enter your name.');
+        return;
+      }
 
       // Disable button while request is in flight
       if (submitBtn) {

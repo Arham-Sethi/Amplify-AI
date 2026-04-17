@@ -66,6 +66,14 @@ export default async function handler(req, res) {
     const normalizedEmail = normalizeEmail(email);
     const sanitizedName = sanitizeName(rawName || '');
 
+    // Name is required for anonymous signups. OAuth signups may arrive
+    // without a name (GitHub often omits full_name) — in that case we fall
+    // back to the local-part of the email so the row still has a label.
+    if (!authed && !sanitizedName) {
+      return res.status(400).json({ success: false, error: 'Please enter your name.' });
+    }
+    const finalName = sanitizedName || (authed ? normalizedEmail.split('@')[0] : '');
+
     // Check for existing user
     const { data: existing } = await supabase
       .from('waitlist')
@@ -108,7 +116,7 @@ export default async function handler(req, res) {
       .from('waitlist')
       .insert({
         email: normalizedEmail,
-        name: sanitizedName || null,
+        name: finalName,
         access_code: accessCode,
         position,
         user_id: userId,
@@ -132,7 +140,7 @@ export default async function handler(req, res) {
       try {
         await sendVerificationEmail({
           email: normalizedEmail,
-          name: sanitizedName,
+          name: finalName,
           token: verificationToken,
           code: accessCode,
           position,
@@ -148,7 +156,7 @@ export default async function handler(req, res) {
       existing: false,
       position,
       code: accessCode,
-      name: sanitizedName,
+      name: finalName,
     });
   } catch (err) {
     console.error('Signup error:', err);

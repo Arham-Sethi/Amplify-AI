@@ -38,6 +38,21 @@ export async function signInWithProvider(provider, next = '/account') {
   });
 }
 
+export async function signInWithEmail(email, password) {
+  const supabase = await getSupabase();
+  return supabase.auth.signInWithPassword({ email, password });
+}
+
+export async function signUpWithEmail(email, password, next = '/account') {
+  const supabase = await getSupabase();
+  const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+  return supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo },
+  });
+}
+
 export async function getSession() {
   const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
