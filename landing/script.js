@@ -418,8 +418,28 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     }
 
     document.querySelectorAll('[data-tab]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.preventDefault();
+        // Decision tree: "Join Waitlist" on the waitlist tab funnels
+        // logged-out visitors through the login page first. If they're
+        // already signed in (either via Supabase OAuth or a local
+        // check-position session), the regular tab behaviour applies.
+        if (btn.dataset.tab === 'waitlist') {
+          try {
+            const hasLocal = !!getSession();
+            let hasOAuth = false;
+            if (window.__amplifyAuth?.getSession) {
+              const s = await window.__amplifyAuth.getSession();
+              hasOAuth = !!s;
+            }
+            if (!hasLocal && !hasOAuth) {
+              window.location.href = '/login?next=' + encodeURIComponent('/waitlist-confirm');
+              return;
+            }
+          } catch {
+            // If auth probe fails, fall through to normal tab behaviour.
+          }
+        }
         switchTab(btn.dataset.tab);
       });
     });
@@ -1106,9 +1126,30 @@ No individual rep data, no jargon. Use C-suite language. Every data point needs 
     window.history.replaceState({}, '', window.location.pathname);
   }
 
+  // --- OAUTH SESSION NAV SWAP ---
+  // Loads the Supabase client lazily so the rest of the page never waits on it.
+  // When a Supabase session exists, swap the "Sign in" button for "Account".
+  async function setupOAuthNav() {
+    try {
+      const mod = await import('/js/supabase-client.js');
+      window.__amplifyAuth = mod;
+      const session = await mod.getSession();
+      const signinBtn = $('nav-signin');
+      const accountBtn = $('nav-account');
+      if (session) {
+        if (signinBtn) signinBtn.style.display = 'none';
+        if (accountBtn) accountBtn.style.display = '';
+      }
+    } catch {
+      // Supabase client couldn't load (e.g. offline / missing config) —
+      // fall back to showing the Sign-in button, which is the default.
+    }
+  }
+
   function init() {
     setupTabs();
     setupWaitlist();
+    setupOAuthNav();
     setupScrollAnimations();
     setupSmoothScroll();
     spawnLeaves();

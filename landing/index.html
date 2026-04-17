@@ -7,7 +7,7 @@
   <meta name="description" content="Amplify transforms rough prompts into expertly engineered ones. Get 5x better AI responses with one click.">
 
   <!-- Security Headers -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
   <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <meta http-equiv="X-Frame-Options" content="DENY">
   <meta name="referrer" content="strict-origin-when-cross-origin">
@@ -52,6 +52,8 @@
         <button class="nav-tab" data-tab="updates">Updates</button>
       </div>
       <div class="nav-right">
+        <a href="/login?next=/account" class="btn btn-sm btn-ghost" id="nav-signin">Sign in</a>
+        <a href="/account" class="btn btn-sm btn-ghost" id="nav-account" style="display:none;">Account</a>
         <button class="btn btn-sm btn-primary" data-tab="waitlist">Join Waitlist</button>
         <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu">
           <span></span><span></span><span></span>
@@ -461,6 +463,10 @@ Output format: Weekly plan + grocery list.</code>
         <div class="waitlist-auth" id="waitlist-auth-signup">
           <div class="auth-card glass-card">
             <h3>Get your spot</h3>
+            <p style="text-align:center;color:#7a6555;font-size:14px;margin:0 0 16px;">
+              <a href="/login?next=/waitlist-confirm" class="link-btn">Sign in with Google or GitHub &rarr;</a>
+              <br><span style="color:#a8977f;font-size:12px;">or enter your email below</span>
+            </p>
             <form id="waitlist-signup-form">
               <div class="form-field" aria-hidden="true" style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden;tab-index:-1;">
                 <label for="signup-website">Website</label>

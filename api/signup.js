@@ -2,9 +2,29 @@ import { supabase } from '../lib/supabase.js';
 import {
   validateEmail, sanitizeName, normalizeEmail,
   generateAccessCode, generateVerificationToken,
-  jsonOk, jsonError, checkRateLimit,
+  checkRateLimit,
 } from '../lib/validate.js';
 import { sendVerificationEmail } from '../lib/email.js';
+
+// If an Authorization: Bearer <token> header is present, verify it with the
+// Supabase service-role client and return the authenticated user (or null
+// if the token is invalid). Called before falling back to email-in-body.
+async function getAuthedUser(req) {
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  if (!authHeader || typeof authHeader !== 'string') return null;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) return null;
+  const token = match[1].trim();
+  if (!token) return null;
+  try {
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) return null;
+    return data.user;
+  } catch (err) {
+    console.error('Token verification failed:', err);
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -18,25 +38,50 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, name } = req.body || {};
+    // Prefer authenticated identity from Supabase OAuth session; fall back
+    // to email+name in the body for the legacy unauthenticated path.
+    const authed = await getAuthedUser(req);
 
-    // Validate email
+    let email;
+    let rawName;
+    let userId = null;
+    let emailPreVerified = false;
+
+    if (authed) {
+      // OAuth path — trust the token, ignore any spoofed body fields.
+      email = authed.email;
+      rawName = authed.user_metadata?.full_name || authed.user_metadata?.name || '';
+      userId = authed.id;
+      emailPreVerified = true;
+    } else {
+      const body = req.body || {};
+      email = body.email;
+      rawName = body.name;
+    }
+
     if (!email || !validateEmail(email)) {
       return res.status(400).json({ success: false, error: 'Please enter a valid email address.' });
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const sanitizedName = sanitizeName(name || '');
+    const sanitizedName = sanitizeName(rawName || '');
 
     // Check for existing user
     const { data: existing } = await supabase
       .from('waitlist')
-      .select('id, email, name, access_code, position, email_verified')
+      .select('id, email, name, access_code, position, email_verified, user_id')
       .eq('email', normalizedEmail)
       .single();
 
     if (existing) {
-      // Return existing user info (don't reveal if verified or not for security)
+      // Backfill user_id if this email was previously on the waitlist as
+      // anonymous and is now being claimed by an OAuth sign-in.
+      if (authed && !existing.user_id) {
+        await supabase
+          .from('waitlist')
+          .update({ user_id: userId, email_verified: true })
+          .eq('id', existing.id);
+      }
       return res.status(200).json({
         success: true,
         existing: true,
@@ -53,8 +98,10 @@ export default async function handler(req, res) {
 
     const position = (count || 0) + 1;
     const accessCode = generateAccessCode();
-    const verificationToken = generateVerificationToken();
-    const verificationExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+    const verificationToken = emailPreVerified ? null : generateVerificationToken();
+    const verificationExpiresAt = emailPreVerified
+      ? null
+      : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
 
     // Insert new user
     const { error: insertError } = await supabase
@@ -64,6 +111,8 @@ export default async function handler(req, res) {
         name: sanitizedName || null,
         access_code: accessCode,
         position,
+        user_id: userId,
+        email_verified: emailPreVerified,
         verification_token: verificationToken,
         verification_expires_at: verificationExpiresAt,
       });
@@ -77,18 +126,21 @@ export default async function handler(req, res) {
       return res.status(500).json({ success: false, error: 'Something went wrong. Please try again.' });
     }
 
-    // Send verification email (non-blocking — don't fail signup if email fails)
-    try {
-      await sendVerificationEmail({
-        email: normalizedEmail,
-        name: sanitizedName,
-        token: verificationToken,
-        code: accessCode,
-        position,
-      });
-    } catch (emailErr) {
-      console.error('Email send error:', emailErr);
-      // Signup still succeeds even if email fails
+    // Send verification email for anonymous signups only.
+    // OAuth signups skip this — the provider already verified the email.
+    if (!emailPreVerified) {
+      try {
+        await sendVerificationEmail({
+          email: normalizedEmail,
+          name: sanitizedName,
+          token: verificationToken,
+          code: accessCode,
+          position,
+        });
+      } catch (emailErr) {
+        console.error('Email send error:', emailErr);
+        // Signup still succeeds even if email fails
+      }
     }
 
     return res.status(201).json({

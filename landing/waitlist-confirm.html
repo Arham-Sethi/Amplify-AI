@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join the waitlist — Amplify AI</title>
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner container">
+      <a href="/" class="nav-logo">
+        <img src="logo.svg" alt="Amplify" class="nav-logo-icon" width="32" height="32">
+        <span class="nav-logo-text">Amplify</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="tab-content active">
+    <section class="waitlist-page">
+      <div class="container">
+        <div class="waitlist-hero">
+          <h1 class="section-title">You're <span class="accent gradient-text">signed in</span></h1>
+          <p class="section-sub" id="hello-line">Ready to claim your spot?</p>
+        </div>
+
+        <div class="waitlist-auth">
+          <div class="auth-card glass-card" id="choice-card">
+            <h3>What next?</h3>
+            <p style="color:#7a6555;font-size:14px;margin:0 0 16px;">
+              Joining the waitlist uses the email on your account &mdash; no form to fill out.
+            </p>
+            <button type="button" id="btn-join" class="btn btn-primary btn-lg btn-block" style="margin-bottom:12px;">
+              Join the Waitlist
+            </button>
+            <a href="/" class="btn btn-ghost btn-lg btn-block">Back to Home</a>
+            <p id="confirm-error" class="form-error" style="display:none;color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
+          </div>
+
+          <div class="auth-card glass-card dashboard-card" id="already-card" style="display:none;">
+            <div class="dashboard-header">
+              <div class="success-check">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2d8f4e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
+              </div>
+              <h3>You're on the list!</h3>
+            </div>
+            <div class="dashboard-stats">
+              <div class="dash-stat">
+                <span class="dash-stat-num" id="already-position">--</span>
+                <span class="dash-stat-label">Your Position</span>
+              </div>
+            </div>
+            <div class="dash-section">
+              <h4>Your Access Code</h4>
+              <div class="code-display">
+                <code id="already-code">AMP-XXXXXX</code>
+              </div>
+            </div>
+            <a href="/" class="btn btn-ghost btn-lg btn-block">Back to Home</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { getSession, getUser } from '/js/supabase-client.js';
+
+    const errorEl = document.getElementById('confirm-error');
+    const choiceCard = document.getElementById('choice-card');
+    const alreadyCard = document.getElementById('already-card');
+    const helloLine = document.getElementById('hello-line');
+    const joinBtn = document.getElementById('btn-join');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = '';
+    }
+
+    async function init() {
+      const session = await getSession();
+      if (!session) {
+        window.location.href = '/login?next=' + encodeURIComponent('/waitlist-confirm');
+        return;
+      }
+
+      const user = await getUser();
+      const name = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0];
+      if (name) helloLine.textContent = `Ready to claim your spot, ${name}?`;
+    }
+
+    joinBtn.addEventListener('click', async () => {
+      errorEl.style.display = 'none';
+      joinBtn.disabled = true;
+      joinBtn.textContent = 'Joining...';
+
+      try {
+        const session = await getSession();
+        if (!session) {
+          window.location.href = '/login?next=' + encodeURIComponent('/waitlist-confirm');
+          return;
+        }
+
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({}),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          showError(data.error || 'Could not join the waitlist. Please try again.');
+          joinBtn.disabled = false;
+          joinBtn.textContent = 'Join the Waitlist';
+          return;
+        }
+
+        document.getElementById('already-position').textContent = `#${data.position}`;
+        document.getElementById('already-code').textContent = data.code;
+        choiceCard.style.display = 'none';
+        alreadyCard.style.display = '';
+      } catch (err) {
+        showError('Network error. Please try again.');
+        joinBtn.disabled = false;
+        joinBtn.textContent = 'Join the Waitlist';
+      }
+    });
+
+    init();
+  </script>
+</body>
+</html>

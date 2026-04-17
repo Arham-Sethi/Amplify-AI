@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signing you in… — Amplify AI</title>
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="tab-content active">
+    <section class="waitlist-page">
+      <div class="container" style="text-align:center;padding-top:120px;">
+        <h1 class="section-title">Signing you in<span id="dots">…</span></h1>
+        <p class="section-sub" id="status">Finalizing your session. This takes a moment.</p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { getSupabase } from '/js/supabase-client.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next') || '/account';
+    // Same whitelist as login.html — prevent open-redirect abuse.
+    const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
+    const statusEl = document.getElementById('status');
+
+    async function finish() {
+      try {
+        const supabase = await getSupabase();
+        // detectSessionInUrl: true (in client config) consumes the hash fragment
+        // automatically. Wait briefly so the session is persisted.
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+          statusEl.textContent = 'Could not complete sign-in. Redirecting you home…';
+          setTimeout(() => { window.location.replace('/login'); }, 1500);
+          return;
+        }
+        window.location.replace(safeNext);
+      } catch (err) {
+        statusEl.textContent = 'Something went wrong. Redirecting…';
+        setTimeout(() => { window.location.replace('/login'); }, 1500);
+      }
+    }
+
+    finish();
+  </script>
+</body>
+</html>

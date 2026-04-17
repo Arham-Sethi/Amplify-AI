@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your account — Amplify AI</title>
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner container">
+      <a href="/" class="nav-logo">
+        <img src="logo.svg" alt="Amplify" class="nav-logo-icon" width="32" height="32">
+        <span class="nav-logo-text">Amplify</span>
+      </a>
+      <div class="nav-right">
+        <button type="button" id="btn-signout" class="btn btn-sm btn-ghost">Sign out</button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="tab-content active">
+    <section class="waitlist-page">
+      <div class="container">
+        <div class="waitlist-hero">
+          <h1 class="section-title">Your <span class="accent gradient-text">Account</span></h1>
+          <p class="section-sub" id="account-email">Loading...</p>
+        </div>
+
+        <div class="waitlist-auth">
+          <div class="auth-card glass-card" id="not-joined-card" style="display:none;">
+            <h3>You haven't joined the waitlist yet</h3>
+            <p style="color:#7a6555;font-size:14px;margin:0 0 16px;">
+              Tap below to claim your spot &mdash; we'll use the email on your account.
+            </p>
+            <a href="/waitlist-confirm" class="btn btn-primary btn-lg btn-block" style="margin-bottom:12px;">
+              Join the Waitlist
+            </a>
+            <a href="/" class="btn btn-ghost btn-lg btn-block">Back to Home</a>
+          </div>
+
+          <div class="auth-card glass-card dashboard-card" id="joined-card" style="display:none;">
+            <div class="dashboard-header">
+              <div class="success-check">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#2d8f4e" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 9 10.5 14.5 8 12"/></svg>
+              </div>
+              <h3>You're on the list!</h3>
+            </div>
+            <div class="dashboard-stats">
+              <div class="dash-stat">
+                <span class="dash-stat-num" id="acc-position">--</span>
+                <span class="dash-stat-label">Your Position</span>
+              </div>
+            </div>
+            <div class="dash-section">
+              <h4>Your Access Code</h4>
+              <div class="code-display">
+                <code id="acc-code">AMP-XXXXXX</code>
+              </div>
+            </div>
+            <a href="/" class="btn btn-ghost btn-lg btn-block">Back to Home</a>
+          </div>
+
+          <p id="acc-error" class="form-error" style="display:none;color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { getSession, getUser, getSupabase, signOut } from '/js/supabase-client.js';
+
+    const errorEl = document.getElementById('acc-error');
+    const notJoined = document.getElementById('not-joined-card');
+    const joined = document.getElementById('joined-card');
+    const emailLine = document.getElementById('account-email');
+
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = '';
+    }
+
+    document.getElementById('btn-signout').addEventListener('click', async () => {
+      await signOut();
+      window.location.href = '/';
+    });
+
+    async function init() {
+      const session = await getSession();
+      if (!session) {
+        window.location.href = '/login?next=' + encodeURIComponent('/account');
+        return;
+      }
+
+      const user = await getUser();
+      emailLine.textContent = user?.email || 'Signed in';
+
+      // RLS policy lets the user read their own waitlist row (if any).
+      const supabase = await getSupabase();
+      const { data, error } = await supabase
+        .from('waitlist')
+        .select('position, access_code')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        showError('Could not load your waitlist status.');
+        notJoined.style.display = '';
+        return;
+      }
+
+      if (data) {
+        document.getElementById('acc-position').textContent = `#${data.position}`;
+        document.getElementById('acc-code').textContent = data.access_code;
+        joined.style.display = '';
+      } else {
+        notJoined.style.display = '';
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>

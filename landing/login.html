@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — Amplify AI</title>
+  <meta name="description" content="Sign in to Amplify with Google or GitHub.">
+
+  <!-- Security Headers -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://esm.sh; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner container">
+      <a href="/" class="nav-logo">
+        <img src="logo.svg" alt="Amplify" class="nav-logo-icon" width="32" height="32">
+        <span class="nav-logo-text">Amplify</span>
+      </a>
+    </div>
+  </nav>
+
+  <main class="tab-content active">
+    <section class="waitlist-page">
+      <div class="container">
+        <div class="waitlist-hero">
+          <h1 class="section-title">Sign in to <span class="accent gradient-text">Amplify</span></h1>
+          <p class="section-sub">Create your account or sign in to manage your spot.</p>
+        </div>
+
+        <div class="waitlist-auth">
+          <div class="auth-card glass-card">
+            <h3>Continue with</h3>
+            <button type="button" id="btn-google" class="btn btn-primary btn-lg btn-block" style="margin-bottom:12px;">
+              Continue with Google
+            </button>
+            <button type="button" id="btn-github" class="btn btn-ghost btn-lg btn-block">
+              Continue with GitHub
+            </button>
+            <p id="login-error" class="form-error" style="display:none;color:#b94a4a;font-size:13px;text-align:center;margin-top:12px;font-weight:500;"></p>
+            <p class="auth-footer" style="margin-top:20px;">
+              Already have an access code? <a href="/#waitlist" class="link-btn">Check your position</a>
+            </p>
+            <p class="auth-footer">
+              <a href="/" class="link-btn">&larr; Back to home</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { signInWithProvider } from '/js/supabase-client.js';
+
+    const params = new URLSearchParams(window.location.search);
+    const next = params.get('next') || '/account';
+    // Whitelist the next path to prevent open-redirect abuse.
+    const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
+
+    const errorEl = document.getElementById('login-error');
+    function showError(msg) {
+      errorEl.textContent = msg;
+      errorEl.style.display = '';
+    }
+
+    async function handleSignIn(provider) {
+      errorEl.style.display = 'none';
+      try {
+        const { error } = await signInWithProvider(provider, safeNext);
+        if (error) showError(error.message || 'Sign-in failed. Please try again.');
+      } catch (err) {
+        showError('Could not reach the sign-in service. Please try again.');
+      }
+    }
+
+    document.getElementById('btn-google').addEventListener('click', () => handleSignIn('google'));
+    document.getElementById('btn-github').addEventListener('click', () => handleSignIn('github'));
+  </script>
+</body>
+</html>
