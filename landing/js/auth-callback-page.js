@@ -1,11 +1,12 @@
 // OAuth callback handler — extracted from inline <script> for CSP compliance.
 
 import { getSupabase } from '/js/supabase-client.js';
+import { sanitizeNextPath } from '/js/path-utils.js';
 
 const params = new URLSearchParams(window.location.search);
-const next = params.get('next') || '/account';
-// Same whitelist as login — prevent open-redirect abuse.
-const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
+// Same whitelist as login — prevent open-redirect abuse (protocol-relative
+// URLs like `//evil` slipped past the earlier inline regex).
+const safeNext = sanitizeNextPath(params.get('next'));
 const statusEl = document.getElementById('status');
 
 // Fire-and-forget welcome email. /api/welcome is idempotent server-side

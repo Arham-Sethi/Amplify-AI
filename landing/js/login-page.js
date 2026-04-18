@@ -7,11 +7,13 @@ import {
   signInWithEmail,
   signUpWithEmail,
 } from '/js/supabase-client.js';
+import { sanitizeNextPath } from '/js/path-utils.js';
 
 const params = new URLSearchParams(window.location.search);
-const next = params.get('next') || '/account';
-// Whitelist the next path to prevent open-redirect abuse.
-const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
+// Whitelist the next path to prevent open-redirect abuse — rejects
+// protocol-relative paths like `//evil` and `/\evil` that the old regex let
+// through. Falls back to /account for anything suspicious.
+const safeNext = sanitizeNextPath(params.get('next'));
 
 const errorEl = document.getElementById('login-error');
 const successEl = document.getElementById('login-success');
@@ -39,16 +41,29 @@ function showSuccess(msg) {
   successEl.style.display = '';
 }
 
+// Build `<prefix> <span class="accent gradient-text">Amplify</span> <suffix>`
+// via DOM nodes so we never feed strings into innerHTML. Keeps the XSS sink
+// closed even if a future change wants to interpolate something dynamic.
+function setHeading(prefix, suffix) {
+  while (heading.firstChild) heading.removeChild(heading.firstChild);
+  heading.appendChild(document.createTextNode(prefix));
+  const span = document.createElement('span');
+  span.className = 'accent gradient-text';
+  span.textContent = 'Amplify';
+  heading.appendChild(span);
+  if (suffix) heading.appendChild(document.createTextNode(suffix));
+}
+
 function applyMode() {
   if (mode === 'signin') {
-    heading.innerHTML = 'Sign in to <span class="accent gradient-text">Amplify</span>';
+    setHeading('Sign in to ', '');
     sub.textContent = 'Welcome back — enter your details below.';
     submitBtn.textContent = 'Sign in';
     passwordInput.autocomplete = 'current-password';
     modePrompt.textContent = 'New to Amplify?';
     modeToggle.textContent = 'Create an account';
   } else {
-    heading.innerHTML = 'Create your <span class="accent gradient-text">Amplify</span> account';
+    setHeading('Create your ', ' account');
     sub.textContent = 'Sign up with email to join the waitlist.';
     submitBtn.textContent = 'Create account';
     passwordInput.autocomplete = 'new-password';
