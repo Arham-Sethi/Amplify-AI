@@ -8,6 +8,24 @@ const next = params.get('next') || '/account';
 const safeNext = /^\/[A-Za-z0-9_\-/]*$/.test(next) ? next : '/account';
 const statusEl = document.getElementById('status');
 
+// Fire-and-forget welcome email. /api/welcome is idempotent server-side
+// (keyed off user_metadata.welcome_email_sent), so calling it on every
+// sign-in is safe — only the first call actually sends mail.
+async function triggerWelcomeEmail(accessToken) {
+  try {
+    await fetch('/api/welcome', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({}),
+    });
+  } catch {
+    // Email failures must not block the redirect — swallow silently.
+  }
+}
+
 async function finish() {
   try {
     const supabase = getSupabase();
@@ -19,6 +37,11 @@ async function finish() {
       setTimeout(() => { window.location.replace('/login'); }, 1500);
       return;
     }
+
+    // Kick off the welcome email in the background — don't await it, we
+    // don't want to delay the redirect on email latency.
+    triggerWelcomeEmail(data.session.access_token);
+
     window.location.replace(safeNext);
   } catch (err) {
     statusEl.textContent = 'Something went wrong. Redirecting…';

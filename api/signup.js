@@ -3,6 +3,7 @@ import {
   validateEmail, sanitizeName, normalizeEmail,
   generateAccessCode, checkRateLimit,
 } from '../lib/validate.js';
+import { sendWaitlistEmail } from '../lib/email.js';
 
 // Verify the Bearer token against Supabase. Returns the user or null.
 async function getAuthedUser(req) {
@@ -114,6 +115,19 @@ export default async function handler(req, res) {
       }
       console.error('Insert error:', insertError);
       return res.status(500).json({ success: false, error: 'Something went wrong. Please try again.' });
+    }
+
+    // Fire the waitlist confirmation email. Failure here must not fail the
+    // signup — the row is already safely persisted.
+    try {
+      await sendWaitlistEmail({
+        email: normalizedEmail,
+        name: finalName,
+        position,
+        code: accessCode,
+      });
+    } catch (emailErr) {
+      console.error('Waitlist email send failed:', emailErr);
     }
 
     return res.status(201).json({
