@@ -1261,6 +1261,10 @@ button { font-family: var(--font); }
 @media (max-width: 600px) {
   .nav-tabs { display: none; }
   .nav-hamburger { display: flex; }
+  /* Join Waitlist is reached via the hamburger menu on phones — hide the
+     nav CTA so it stops overlapping the Amplify wordmark on narrow widths. */
+  .nav-right .btn-primary[data-tab="waitlist"] { display: none; }
+  .nav-right { gap: 8px; }
   .bento-grid { grid-template-columns: 1fr; }
   .bento-wide { grid-column: span 1; }
   .bento-wide-inner { grid-template-columns: 1fr; }
