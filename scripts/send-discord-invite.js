@@ -27,7 +27,10 @@ const ONLY = ONLY_ARG ? ONLY_ARG.slice('--only='.length).toLowerCase() : null;
 
 const DISCORD_URL = 'https://discord.gg/kxx3hQd9';
 const SUBJECT = 'Amplify AI community — your early access invite';
+// Resolve sender in this order: DISCORD_FROM_EMAIL (override for this
+// broadcast) → FROM_EMAIL (shared with lib/email.js) → hardcoded default.
 const FROM = process.env.DISCORD_FROM_EMAIL
+  || process.env.FROM_EMAIL
   || 'Dev from Amplify AI <hello@amplifyai.cc>';
 const REPLY_TO = process.env.REPLY_TO_EMAIL || 'contact@kangaroo.solutions';
 const SLEEP_MS = 600; // pace sends; well under Resend's 10 req/s limit
