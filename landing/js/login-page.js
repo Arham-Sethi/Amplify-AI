@@ -41,6 +41,20 @@ function showSuccess(msg) {
   successEl.style.display = '';
 }
 
+// Swap the signup form for the "check your email" card. Used after a
+// successful email signup when Supabase requires confirmation — the old
+// flow showed a tiny green message that got immediately wiped by
+// applyMode()'s clearMessages(), so users had no idea anything happened.
+function showConfirmationCard(email) {
+  const formCard = document.getElementById('auth-form-card');
+  const confirmCard = document.getElementById('auth-confirm-card');
+  const display = document.getElementById('confirm-email-display');
+  if (!formCard || !confirmCard || !display) return;
+  display.textContent = email;
+  formCard.style.display = 'none';
+  confirmCard.style.display = '';
+}
+
 // Build `<prefix> <span class="accent gradient-text">Amplify</span> <suffix>`
 // via DOM nodes so we never feed strings into innerHTML. Keeps the XSS sink
 // closed even if a future change wants to interpolate something dynamic.
@@ -126,10 +140,12 @@ document.getElementById('email-form').addEventListener('submit', async (e) => {
         // Email confirmation disabled — go straight in.
         window.location.replace(safeNext);
       } else {
-        // Email confirmation required — user must click the link.
-        showSuccess('Check your email to confirm your account, then sign in.');
-        mode = 'signin';
-        applyMode();
+        // Email confirmation required — replace the form with a dedicated
+        // "check your email" card so the user has a clear next step. The old
+        // path called showSuccess() but immediately wiped it via applyMode()'s
+        // clearMessages(), leaving the user staring at an empty signup form
+        // with no feedback that anything had happened.
+        showConfirmationCard(email);
       }
     }
   } catch (err) {

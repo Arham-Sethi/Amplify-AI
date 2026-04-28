@@ -73,7 +73,7 @@
         </div>
 
         <div class="waitlist-auth">
-          <div class="auth-card glass-card">
+          <div class="auth-card glass-card" id="auth-form-card">
             <button type="button" id="btn-google" class="btn btn-ghost btn-lg oauth-btn">
               <svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true">
                 <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
@@ -114,6 +114,30 @@
             <p class="auth-footer" style="margin-top:16px;">
               <a href="/" class="link-btn">&larr; Back to home</a>
             </p>
+          </div>
+
+          <!-- Shown after successful email signup when Supabase requires email
+               confirmation. Replaces the form so the user has a single, clear
+               next step instead of an empty-looking form. -->
+          <div class="auth-card glass-card" id="auth-confirm-card" style="display:none;text-align:center;">
+            <div style="display:flex;justify-content:center;margin-bottom:16px;">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#c47a3a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <path d="m22 7-10 5L2 7"/>
+              </svg>
+            </div>
+            <h3 style="margin:0 0 12px;">Check your email</h3>
+            <p style="color:#7a6555;font-size:15px;margin:0 0 8px;line-height:1.5;">
+              We sent a confirmation link to<br>
+              <strong id="confirm-email-display" style="color:#3c2b1f;word-break:break-all;"></strong>
+            </p>
+            <p style="color:#7a6555;font-size:14px;margin:0 0 18px;line-height:1.5;">
+              Click the link in your inbox to activate your account, then come back to sign in.
+            </p>
+            <p style="color:#a8977f;font-size:12px;margin:0 0 18px;">
+              Don't see it? Check your spam folder. Links expire after 24 hours.
+            </p>
+            <a href="/login" class="btn btn-ghost btn-lg btn-block">Back to sign in</a>
           </div>
         </div>
       </div>
