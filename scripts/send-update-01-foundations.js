@@ -4,9 +4,9 @@
 // "one universal prompt fixer". First in a 4-email cadence (every 2 days).
 //
 // Usage (from repo root):
-//   node scripts/send-update-01-foundations.js --dry-run
-//   node scripts/send-update-01-foundations.js --only=devhemnani777@gmail.com
-//   node scripts/send-update-01-foundations.js
+//   node --env-file=.env scripts/send-update-01-foundations.js --dry-run
+//   node --env-file=.env scripts/send-update-01-foundations.js --only=you@x.com
+//   node --env-file=.env scripts/send-update-01-foundations.js
 //
 // Required env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY.
 
@@ -25,33 +25,34 @@ The big thing that's locked: Amplify treats prompts as 6 distinct categories —
 
 We considered "one universal prompt fixer" — every other tool does it that way — and threw it out. Bad prompts are bad in different ways. Lumping them together produces generic, watered-down rewrites.
 
-Two questions I'd love your take on:
+Two questions we'd love your take on:
   1. Which of the six matches what you usually paste into ChatGPT or Claude?
   2. What's the dumbest thing your AI has done because your prompt was unclear?
 
-Reply to this email — or come hang in the Discord, about 50 of you are already in:
+Reply to this email, or come hang in our Discord — about 50 of you are already in:
 ${DISCORD_URL}
 
-— Dev
-Amplify AI
+— The Amplify AI Team
 
 P.S. You're #${position} on the list. Holding it.
 `;
 
-  const html = `<p>Hi ${escapeHtml(first)},</p>
-<p>Quick update on what we've been building since you signed up.</p>
-<p>The big thing that's locked: Amplify treats prompts as 6 distinct categories — task-only, context-heavy, vague, multi-step, role/persona, and debug/fix. Each one needs different cleanup. Vague prompts need clarifying questions surfaced. Debug prompts need the failing input made explicit. Role-play prompts need scope guards.</p>
-<p>We considered "one universal prompt fixer" — every other tool does it that way — and threw it out. Bad prompts are bad in different ways. Lumping them together produces generic, watered-down rewrites.</p>
-<p>Two questions I'd love your take on:</p>
-<ol>
-<li>Which of the six matches what you usually paste into ChatGPT or Claude?</li>
-<li>What's the dumbest thing your AI has done because your prompt was unclear?</li>
-</ol>
-<p>Reply to this email — or come hang in the Discord, about 50 of you are already in:<br><a href="${DISCORD_URL}">${DISCORD_URL}</a></p>
-<p>— Dev<br>Amplify AI</p>
-<p>P.S. You're #${position} on the list. Holding it.</p>`;
+  const bodyHtml = `              <p style="margin:0 0 16px;">Hi ${escapeHtml(first)},</p>
+              <p style="margin:0 0 16px;">Quick update on what we've been building since you signed up.</p>
+              <p style="margin:0 0 16px;">The big thing that's locked: Amplify treats prompts as <strong>6 distinct categories</strong> — task-only, context-heavy, vague, multi-step, role/persona, and debug/fix. Each one needs different cleanup. Vague prompts need clarifying questions surfaced. Debug prompts need the failing input made explicit. Role-play prompts need scope guards.</p>
+              <p style="margin:0 0 16px;">We considered "one universal prompt fixer" — every other tool does it that way — and threw it out. Bad prompts are bad in different ways. Lumping them together produces generic, watered-down rewrites.</p>
+              <p style="margin:0 0 10px;">Two questions we'd love your take on:</p>
+              <ol style="margin:0 0 18px;padding-left:22px;">
+                <li style="margin:0 0 6px;">Which of the six matches what you usually paste into ChatGPT or Claude?</li>
+                <li>What's the dumbest thing your AI has done because your prompt was unclear?</li>
+              </ol>
+              <p style="margin:0 0 18px;">Reply to this email, or come hang in our Discord — about 50 of you are already in:<br><a href="${DISCORD_URL}" style="color:#c47a3a;text-decoration:none;">${DISCORD_URL}</a></p>
+              <p style="margin:0 0 4px;">— The Amplify AI Team</p>
+              <p style="margin:24px 0 0;color:#7a6555;font-size:14px;">P.S. You're #${position} on the list. Holding it.</p>`;
 
-  return { text, html };
+  const preheader = "Six prompt categories, why we're not building 'one fits all'.";
+
+  return { text, bodyHtml, preheader };
 }
 
 sendCampaign({
