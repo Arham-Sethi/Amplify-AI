@@ -27,7 +27,7 @@ const DISCORD_URL = 'https://discord.gg/xck6AmNbt';
 const SUBJECT = 'New Discord invite link';
 const FROM = process.env.DISCORD_FROM_EMAIL
   || process.env.FROM_EMAIL
-  || 'Dev from Amplify AI <hello@amplifyai.cc>';
+  || 'Amplify-AI <hello@amplifyai.cc>';
 const REPLY_TO = process.env.REPLY_TO_EMAIL || 'contact@kangaroo.solutions';
 const SLEEP_MS = 600;
 
@@ -53,8 +53,7 @@ What you get as a waitlist member:
 - Access to the testing hub — try unreleased features and help shape the product before it lands
 
 Best,
-Dev
-Amplify AI
+Amplify-AI team
 `;
 
   const html = `<p>Hi ${escapeHtml(first)},</p>
@@ -66,7 +65,7 @@ Amplify AI
 <li>Early access to the Chrome extension before it goes public</li>
 <li>Access to the testing hub — try unreleased features and help shape the product before it lands</li>
 </ul>
-<p>Best,<br>Dev<br>Amplify AI</p>`;
+<p>Best,<br>Amplify-AI team</p>`;
 
   return { text, html };
 }
