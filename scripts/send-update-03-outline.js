@@ -14,7 +14,7 @@
 
 import { sendCampaign, escapeHtml, firstName } from '../lib/campaign.js';
 
-const DISCORD_URL = 'https://discord.gg/kxx3hQd9';
+const DISCORD_URL = 'https://discord.gg/xck6AmNbt';
 const SUPPORT_EMAIL = 'contact@kangaroo.solutions';
 
 function buildEmail({ name, position }) {

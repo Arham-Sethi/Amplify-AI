@@ -12,7 +12,7 @@
 
 import { sendCampaign, escapeHtml, firstName } from '../lib/campaign.js';
 
-const DISCORD_URL = 'https://discord.gg/kxx3hQd9';
+const DISCORD_URL = 'https://discord.gg/xck6AmNbt';
 
 function buildEmail({ name, position }) {
   const first = firstName(name);
