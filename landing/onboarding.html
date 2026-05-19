@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Set up Amplify AI</title>
+
+    <!--
+      Tight CSP. We load:
+        - One inline <style> block (own origin, scoped to this page)
+        - Two ES modules from /js and /vendor (own origin)
+      No third-party JS, no inline event handlers. Per CLAUDE.md §17.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' https://esm.sh; style-src 'self' 'unsafe-inline'; connect-src 'self' https://lmbsulisdrzxhhvxidlp.supabase.co; img-src 'self' data:;"
+    />
+
+    <link rel="icon" href="/landing/favicon.svg" type="image/svg+xml" />
+
+    <style>
+      /*
+        Minimal, scoped styles. Once the live site's full style.css is
+        merged back in, this whole block can be replaced with a class
+        link in the live build. Until then we keep onboarding visually
+        coherent without depending on landing/style.css existing.
+      */
+      :root {
+        --bg: #fafafa;
+        --fg: #111827;
+        --muted: #6b7280;
+        --border: rgba(0, 0, 0, 0.08);
+        --primary: #111827;
+        --accent: #8b5cf6;
+        --error: #b91c1c;
+        --success: #1e7a3e;
+        --radius: 14px;
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        --max-w: 560px;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+      }
+      main.onboarding {
+        width: 100%;
+        max-width: var(--max-w);
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 28px 28px 24px;
+      }
+      header.onboarding-header {
+        margin-bottom: 18px;
+      }
+      .onboarding-eyebrow {
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--accent);
+        margin: 0 0 4px;
+      }
+      h1.onboarding-title {
+        font-size: 24px;
+        margin: 0 0 6px;
+        line-height: 1.2;
+      }
+      .onboarding-subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .progress {
+        display: flex;
+        gap: 6px;
+        margin: 20px 0 22px;
+      }
+      .progress-step {
+        flex: 1;
+        height: 4px;
+        background: rgba(17, 24, 39, 0.08);
+        border-radius: 999px;
+      }
+      .progress-step.active { background: var(--accent); }
+      .progress-step.done { background: var(--primary); }
+
+      .step { display: none; }
+      .step.active { display: block; }
+
+      .field { margin-bottom: 18px; }
+      .field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      .field-hint {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 4px 0 0;
+      }
+
+      .chip-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+      @media (max-width: 480px) {
+        .chip-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      .chip {
+        appearance: none;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 8px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 500;
+        text-align: center;
+        transition: all 100ms ease-out;
+      }
+      .chip:hover { border-color: var(--accent); }
+      .chip[aria-pressed="true"] {
+        background: var(--primary);
+        color: #fff;
+        border-color: var(--primary);
+      }
+
+      .seg {
+        display: flex;
+        gap: 6px;
+        background: rgba(17, 24, 39, 0.04);
+        padding: 4px;
+        border-radius: 10px;
+      }
+      .seg-button {
+        flex: 1;
+        appearance: none;
+        background: transparent;
+        border: 0;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        font: inherit;
+        font-weight: 500;
+        color: var(--fg);
+      }
+      .seg-button:hover { background: rgba(17, 24, 39, 0.06); }
+      .seg-button[aria-pressed="true"] {
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 96px;
+        resize: vertical;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font: inherit;
+        background: #fff;
+      }
+      textarea:focus {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+
+      .char-count {
+        float: right;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+        gap: 12px;
+      }
+      .button {
+        appearance: none;
+        font: inherit;
+        font-weight: 600;
+        padding: 10px 18px;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 0;
+        transition: opacity 80ms;
+      }
+      .button-primary {
+        background: var(--primary);
+        color: #fff;
+      }
+      .button-primary:hover { background: #000; }
+      .button-primary:disabled { opacity: 0.6; cursor: default; }
+      .button-secondary {
+        background: transparent;
+        color: var(--muted);
+      }
+      .button-secondary:hover { color: var(--fg); }
+      .button-secondary:disabled { opacity: 0.4; cursor: default; }
+
+      .status {
+        font-size: 13px;
+        min-height: 18px;
+      }
+      .status.pending  { color: var(--muted); }
+      .status.error    { color: var(--error); }
+      .status.success  { color: var(--success); }
+
+      .auth-needed,
+      .all-done {
+        text-align: center;
+        padding: 24px 12px 12px;
+        display: none;
+      }
+      .auth-needed.active,
+      .all-done.active { display: block; }
+      .all-done h2 { margin: 8px 0 4px; }
+      .all-done p  { color: var(--muted); margin: 0 0 16px; }
+    </style>
+  </head>
+
+  <body>
+    <main class="onboarding" aria-labelledby="onboarding-title">
+      <header class="onboarding-header">
+        <p class="onboarding-eyebrow">Welcome to Amplify</p>
+        <h1 id="onboarding-title" class="onboarding-title">Tell us how you write</h1>
+        <p class="onboarding-subtitle">
+          A 30-second setup so every prompt rewrite matches your style.
+        </p>
+      </header>
+
+      <!-- Auth gate. Shown when getSession() returns null. -->
+      <section id="auth-needed" class="auth-needed" aria-live="polite">
+        <p>You need to be signed in first.</p>
+        <a class="button button-primary" href="/login.html?next=/onboarding.html">
+          Sign in
+        </a>
+      </section>
+
+      <!-- Progress bar — three filled segments as the user advances. -->
+      <div id="progress" class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="3">
+        <div class="progress-step active" data-step="1"></div>
+        <div class="progress-step" data-step="2"></div>
+        <div class="progress-step" data-step="3"></div>
+      </div>
+
+      <!-- Step 1 — target LLM (single-select). -->
+      <section id="step-1" class="step active" aria-labelledby="step-1-title">
+        <div class="field">
+          <label id="step-1-title">Which AI do you use most?</label>
+          <p class="field-hint">
+            Each AI has its own preferred prompting style — Amplify tunes
+            rewrites for the one you pick.
+          </p>
+          <div id="target-llm-grid" class="chip-grid" role="radiogroup" aria-labelledby="step-1-title">
+            <button type="button" class="chip" data-target-llm="claude" role="radio" aria-pressed="true">Claude</button>
+            <button type="button" class="chip" data-target-llm="gpt"    role="radio" aria-pressed="false">ChatGPT</button>
+            <button type="button" class="chip" data-target-llm="gemini" role="radio" aria-pressed="false">Gemini</button>
+            <button type="button" class="chip" data-target-llm="grok"   role="radio" aria-pressed="false">Grok</button>
+            <button type="button" class="chip" data-target-llm="other"  role="radio" aria-pressed="false">Other</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2 — default rewrite intensity (single-select). -->
+      <section id="step-2" class="step" aria-labelledby="step-2-title">
+        <div class="field">
+          <label id="step-2-title">How aggressive should rewrites be?</label>
+          <p class="field-hint">
+            Gentle keeps your voice. Aggressive rewrites the whole prompt for clarity.
+            You can change this per-request later.
+          </p>
+          <div id="intensity-seg" class="seg" role="radiogroup" aria-labelledby="step-2-title">
+            <button type="button" class="seg-button" data-intensity="gentle"     role="radio" aria-pressed="false">Gentle</button>
+            <button type="button" class="seg-button" data-intensity="medium"     role="radio" aria-pressed="true">Medium</button>
+            <button type="button" class="seg-button" data-intensity="aggressive" role="radio" aria-pressed="false">Aggressive</button>
+          </div>
+          <p id="intensity-desc" class="field-hint" style="margin-top: 12px;">
+            Medium — balanced. The default. Tighten what's broken, leave what's working.
+          </p>
+        </div>
+      </section>
+
+      <!-- Step 3 — tone + work_context. -->
+      <section id="step-3" class="step" aria-labelledby="step-3-title">
+        <div class="field">
+          <label id="step-3-title">Pick a tone for rewrites</label>
+          <div id="tone-seg" class="seg" role="radiogroup" aria-labelledby="step-3-title">
+            <button type="button" class="seg-button" data-tone="work"      role="radio" aria-pressed="true">Work</button>
+            <button type="button" class="seg-button" data-tone="casual"    role="radio" aria-pressed="false">Casual</button>
+            <button type="button" class="seg-button" data-tone="technical" role="radio" aria-pressed="false">Technical</button>
+            <button type="button" class="seg-button" data-tone="warm"      role="radio" aria-pressed="false">Warm</button>
+            <button type="button" class="seg-button" data-tone="neutral"   role="radio" aria-pressed="false">Neutral</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="work-context">
+            What do you do? <span class="char-count"><span id="work-context-count">0</span>/1000</span>
+          </label>
+          <textarea
+            id="work-context"
+            maxlength="1000"
+            placeholder="Two sentences max. e.g. 'Senior backend engineer building distributed systems. I write a lot of Postgres + Go.'"
+          ></textarea>
+          <p class="field-hint">
+            Optional. Helps Amplify pitch rewrites at the right level — skip technical
+            jargon for a recruiter, keep it for an engineer.
+          </p>
+        </div>
+      </section>
+
+      <!-- Done state — shown after a successful save. -->
+      <section id="all-done" class="all-done" aria-live="polite">
+        <h2>You're set.</h2>
+        <p>Amplify is now tuned to your style. Close this tab and head back to your AI.</p>
+        <a class="button button-primary" href="/account.html">Go to account</a>
+      </section>
+
+      <!-- Action row -->
+      <div id="actions" class="actions">
+        <button id="back-btn" type="button" class="button button-secondary" disabled>Back</button>
+        <span id="status" class="status" aria-live="polite"></span>
+        <button id="next-btn" type="button" class="button button-primary">Continue</button>
+      </div>
+    </main>
+
+    <script type="module" src="/js/onboarding-page.js"></script>
+  </body>
+</html>

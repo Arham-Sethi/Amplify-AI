@@ -1,0 +1,64 @@
+{
+  "version": "v1",
+  "category": "multi_step_workflow",
+  "description": "Prompt that asks the model to execute an ordered sequence of steps, ideally with thinking between them and a defined termination condition.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "steps_enumerated",
+      "weight": 20,
+      "test": "regex",
+      "pattern": "(?:^|\\n)\\s*(?:[1-9][0-9]?\\.|step\\s*[1-9]|first,|second,|third,|next,|then,|finally,)",
+      "description": "Steps are explicitly enumerated (numeric list or ordinal markers) so the model executes in order."
+    },
+    {
+      "id": "min_three_steps",
+      "weight": 15,
+      "test": "regex_count_min",
+      "pattern": "(?:^|\\n)\\s*[1-9][0-9]?\\.\\s",
+      "value": 3,
+      "description": "At least 3 enumerated steps — fewer than that this is probably a task_only mislabel."
+    },
+    {
+      "id": "per_step_output_defined",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(return|output|produce|emit|write|generate|provide)\\b[^.]{0,80}\\b(as|in|format|table|list|json|markdown|paragraph|sentence)\\b",
+      "description": "At least one step says what shape its output should take."
+    },
+    {
+      "id": "thinking_directive",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(think step by step|reason step[- ]by[- ]step|work through|show your reasoning|reason through|chain of thought|let's think)\\b",
+      "description": "Explicit invitation to reason between steps."
+    },
+    {
+      "id": "final_format_specified",
+      "weight": 10,
+      "test": "has_format_directive",
+      "description": "Final output format is constrained."
+    },
+    {
+      "id": "stop_condition_or_loop_bound",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(stop when|stop after|until|once you have|finish when|terminate when|end when|complete when|no more than \\d+|at most \\d+)\\b",
+      "description": "Either a stop condition or a hard loop bound, so the model doesn't run away."
+    },
+    {
+      "id": "no_overload",
+      "weight": 10,
+      "test": "regex_count_max",
+      "pattern": "(?:^|\\n)\\s*[1-9][0-9]?\\.\\s",
+      "value": 10,
+      "description": "No more than 10 enumerated steps — beyond that the workflow should be split into sub-tasks."
+    },
+    {
+      "id": "audience_specified",
+      "weight": 5,
+      "test": "has_audience_directive",
+      "description": "Final audience is named."
+    }
+  ]
+}

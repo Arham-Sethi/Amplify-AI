@@ -1,0 +1,28 @@
+import { z } from 'zod';
+export declare const SourceLLMSchema: z.ZodEnum<["openai", "anthropic", "google", "opensource", "unknown"]>;
+export type SourceLLM = z.infer<typeof SourceLLMSchema>;
+export declare const ProcessingModeSchema: z.ZodEnum<["standard", "local"]>;
+export type ProcessingMode = z.infer<typeof ProcessingModeSchema>;
+export declare const EntityTypeSchema: z.ZodEnum<["person", "code", "concept", "org", "tech", "location", "file_path", "url", "api", "other"]>;
+export type EntityType = z.infer<typeof EntityTypeSchema>;
+export declare const RelationshipTypeSchema: z.ZodEnum<["uses", "created_by", "depends_on", "related_to", "part_of", "implements", "extends", "communicates_with"]>;
+export type RelationshipType = z.infer<typeof RelationshipTypeSchema>;
+export declare const SummaryLevelSchema: z.ZodEnum<["message", "topic", "global"]>;
+export type SummaryLevel = z.infer<typeof SummaryLevelSchema>;
+export declare const DecisionStatusSchema: z.ZodEnum<["active", "superseded", "reverted"]>;
+export type DecisionStatus = z.infer<typeof DecisionStatusSchema>;
+export declare const TaskStatusSchema: z.ZodEnum<["active", "completed", "blocked", "cancelled"]>;
+export type TaskStatus = z.infer<typeof TaskStatusSchema>;
+export declare const TonePreferenceSchema: z.ZodEnum<["formal", "casual", "technical"]>;
+export type TonePreference = z.infer<typeof TonePreferenceSchema>;
+export declare const DetailLevelSchema: z.ZodEnum<["concise", "detailed", "exhaustive"]>;
+export type DetailLevel = z.infer<typeof DetailLevelSchema>;
+export declare const ArtifactTypeSchema: z.ZodEnum<["code", "config", "file", "output", "diagram", "document"]>;
+export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
+export declare const SafetyFlagTypeSchema: z.ZodEnum<["injection", "poisoning", "policy_violation", "pii_detected"]>;
+export type SafetyFlagType = z.infer<typeof SafetyFlagTypeSchema>;
+export declare const SafetySeveritySchema: z.ZodEnum<["low", "medium", "high", "critical"]>;
+export type SafetySeverity = z.infer<typeof SafetySeveritySchema>;
+export declare const SafetyActionSchema: z.ZodEnum<["stripped", "flagged", "blocked", "redacted"]>;
+export type SafetyAction = z.infer<typeof SafetyActionSchema>;
+//# sourceMappingURL=enums.d.ts.map

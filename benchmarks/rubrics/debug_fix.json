@@ -1,0 +1,64 @@
+{
+  "version": "v1",
+  "category": "debug_fix",
+  "description": "Prompt asking the model to diagnose, debug, or fix a piece of code. Must include the code, the symptom, and ideally what the user has already tried.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "code_block_present",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "(```[\\s\\S]+?```|`[^`\\n]+`|\\n\\s{4,}\\S)",
+      "description": "Code is fenced (triple-backtick), inline-coded, or indented as a block."
+    },
+    {
+      "id": "language_named",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(python|javascript|js|typescript|ts|java|kotlin|swift|rust|go|golang|c\\+\\+|cpp|c#|csharp|ruby|php|sql|bash|shell|html|css|jsx|tsx|node|deno|bun)\\b",
+      "description": "Language is named so the model can apply the right idioms and tooling."
+    },
+    {
+      "id": "expected_behavior_stated",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(expect|expected|should|supposed to|meant to|ought to|i want|i need it to|the goal is)\\b",
+      "description": "What the code is supposed to do is stated."
+    },
+    {
+      "id": "actual_behavior_stated",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(actual|actually|but it|instead|currently|now it|happens|returns|produces|throws|crashes|fails|gives|outputs|prints)\\b",
+      "description": "What the code is actually doing is stated."
+    },
+    {
+      "id": "error_or_stack_included",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(error|exception|traceback|stack trace|stacktrace|undefined is not|cannot read|null pointer|segfault|panic|warning|ENOENT|ETIMEDOUT|TypeError|SyntaxError|ReferenceError|ValueError|RuntimeError)\\b",
+      "description": "An actual error message, exception name, or stack trace is included."
+    },
+    {
+      "id": "what_was_tried",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(i tried|i've tried|already tried|attempted|i checked|i verified|i confirmed|i ran|i tested)\\b",
+      "description": "User has stated what they've already tried so the model doesn't suggest the same."
+    },
+    {
+      "id": "minimal_repro",
+      "weight": 10,
+      "test": "length_max",
+      "value": 3000,
+      "description": "Snippet is under 3000 chars — debug prompts longer than that are usually un-minimized and waste tokens."
+    },
+    {
+      "id": "explicit_question",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "(\\?|\\bwhy\\b|\\bhow\\b|\\bwhat\\b|\\bfix\\b|\\bdebug\\b|\\bsolve\\b|\\bdiagnose\\b|\\bexplain\\b)",
+      "description": "An explicit question or imperative — not just 'here's broken code'."
+    }
+  ]
+}

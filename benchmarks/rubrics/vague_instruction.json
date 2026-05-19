@@ -1,0 +1,68 @@
+{
+  "version": "v1",
+  "category": "vague_instruction",
+  "description": "Prompts that lack structure or specificity — 'make this better', 'fix it', 'help me with this'. The defining trait is that the model has to guess what the user wants. This category has the highest leverage for rewrite.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "clear_referent",
+      "weight": 20,
+      "test": "not_regex",
+      "pattern": "^\\s*(?:make\\s+(?:this|that|it)\\s+(?:better|good|nicer|cleaner)|fix\\s+(?:this|that|it)|improve\\s+(?:this|that|it)|help\\s+(?:me|with\\s+(?:this|that|it))|do\\s+(?:this|that|it)|handle\\s+(?:this|that|it))\\s*\\.?\\s*$",
+      "description": "Prompt is not just a bare 'make this better' / 'fix it' / 'help me' with no referent. The single biggest failure mode in this category."
+    },
+    {
+      "id": "task_verb_present",
+      "weight": 15,
+      "test": "has_task_verb",
+      "description": "A concrete task verb is present (write / draft / refactor / explain / etc.) rather than only vague verbs (better / nicer / good)."
+    },
+    {
+      "id": "subject_named",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(this|that|the following|below|above)\\s+(?:code|function|class|file|email|message|paragraph|sentence|essay|draft|design|plan|spec|doc|document|note|outline|prompt|response|reply|comment|commit|pr|pull request|bug|issue|story|ticket|task|article|post|tweet|thread|page|section|table|list|query|sql|api|endpoint|component|page|layout|copy|caption|title|heading|description|summary|report)\\b",
+      "description": "Subject is named (not just 'this' / 'that' / 'it') so the model knows what artifact to operate on."
+    },
+    {
+      "id": "desired_outcome_stated",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(so that|in order to|so it|so they|because|to make it|to help|to ensure|the goal is|i want it to|i need it to|aim is|outcome|result|so we can|so users|so readers)\\b",
+      "description": "User states what they want the change to achieve, not just 'make it better'."
+    },
+    {
+      "id": "criteria_named",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(shorter|longer|more concise|less wordy|simpler|clearer|more formal|less formal|more technical|more friendly|warmer|punchier|more specific|more concrete|more actionable|more readable|more maintainable|more efficient|faster|safer|more secure|easier to understand|easier to read|easier to scan)\\b",
+      "description": "Specific quality criterion is named (shorter, clearer, more formal, faster, etc.) rather than the empty word 'better'."
+    },
+    {
+      "id": "format_specified",
+      "weight": 10,
+      "test": "has_format_directive",
+      "description": "Output format is constrained."
+    },
+    {
+      "id": "length_specified",
+      "weight": 5,
+      "test": "has_length_directive",
+      "description": "Length is constrained."
+    },
+    {
+      "id": "no_filler",
+      "weight": 5,
+      "test": "not_regex",
+      "pattern": "\\b(please can you|i was wondering if|could you maybe|if it's not too much trouble|i'd really appreciate|sorry to bother|just wondering)\\b",
+      "description": "No throat-clearing meta-language that wastes tokens without changing the output."
+    },
+    {
+      "id": "min_useful_length",
+      "weight": 5,
+      "test": "length_min",
+      "value": 20,
+      "description": "Prompt is at least 20 characters — under that almost certainly carries no actionable instruction."
+    }
+  ]
+}

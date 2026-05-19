@@ -1,0 +1,108 @@
+{
+  "$schema_note": "Selects which technique IDs to inject for a given (category, intent, target) tuple. Intent='*' is the default lane for a category; specific intents override. Target='*' is the default; specific targets override. The rewriter merges defaults + overrides, dedupes, and inlines the matching files from benchmarks/techniques/ into the system prompt as <techniques>. Source of truth: CLAUDE.md §7.5.",
+  "version": "1.0.0",
+  "default_techniques_when_no_match": [
+    "explicit-format-block",
+    "success-criteria-statement"
+  ],
+  "rules": [
+    {
+      "category": "task_only",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["explicit-format-block", "explicit-constraint-listing"]
+    },
+    {
+      "category": "task_only",
+      "intent": "extraction",
+      "target": "*",
+      "techniques": ["few-shot", "output-schema-priming"]
+    },
+    {
+      "category": "task_only",
+      "intent": "classification",
+      "target": "*",
+      "techniques": ["few-shot", "output-schema-priming"]
+    },
+
+    {
+      "category": "context_heavy",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "explicit-format-block"]
+    },
+    {
+      "category": "context_heavy",
+      "intent": "*",
+      "target": "google",
+      "techniques": ["explicit-format-block", "explicit-constraint-listing"],
+      "_comment": "Gemini prefers labelled markdown over XML tags — see benchmarks/best-practices/google.md."
+    },
+    {
+      "category": "context_heavy",
+      "intent": "structured_summarisation",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "output-schema-priming"]
+    },
+    {
+      "category": "context_heavy",
+      "intent": "decision_recommendation_from_data",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "chain-of-thought", "success-criteria-statement"]
+    },
+
+    {
+      "category": "vague_instruction",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["success-criteria-statement", "explicit-constraint-listing", "explicit-format-block"]
+    },
+
+    {
+      "category": "multi_step_workflow",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "chain-of-thought"]
+    },
+    {
+      "category": "multi_step_workflow",
+      "intent": "*",
+      "target": "openai",
+      "techniques": ["xml-tag-scaffolding"],
+      "_comment": "Skip CoT on o-series — see benchmarks/best-practices/openai.md. Backend should also check the specific model id, not just target=openai, before applying."
+    },
+    {
+      "category": "multi_step_workflow",
+      "intent": "*",
+      "target": "deepseek",
+      "techniques": ["xml-tag-scaffolding"],
+      "_comment": "Skip CoT on R1 — native reasoning model."
+    },
+
+    {
+      "category": "role_persona",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["role-injection", "explicit-format-block", "success-criteria-statement"]
+    },
+    {
+      "category": "role_persona",
+      "intent": "expert_review",
+      "target": "*",
+      "techniques": ["role-injection", "explicit-constraint-listing", "chain-of-thought"]
+    },
+
+    {
+      "category": "debug_fix",
+      "intent": "*",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "chain-of-thought", "explicit-format-block"]
+    },
+    {
+      "category": "debug_fix",
+      "intent": "root_cause_analysis",
+      "target": "*",
+      "techniques": ["xml-tag-scaffolding", "chain-of-thought", "success-criteria-statement"]
+    }
+  ]
+}

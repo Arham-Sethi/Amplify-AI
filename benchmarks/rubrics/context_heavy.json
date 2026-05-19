@@ -1,0 +1,61 @@
+{
+  "version": "v1",
+  "category": "context_heavy",
+  "description": "Prompt where the bulk of the input is reference material — a doc, a transcript, a code blob, a long quote — and the actual task is a comparatively short directive about that material.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "context_wrapped",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "(<context>[\\s\\S]+?</context>|```[\\s\\S]+?```|\"\"\"[\\s\\S]+?\"\"\")",
+      "description": "Reference material is fenced (XML-style tag or triple-backtick / triple-quote) so the model can tell prompt from data."
+    },
+    {
+      "id": "task_stated_before_context",
+      "weight": 20,
+      "test": "task_position_max",
+      "value": 0.3,
+      "description": "Task verb appears within the first 30% of the prompt so the model knows what to look for as it reads the context."
+    },
+    {
+      "id": "grounding_clause",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(only use|based on|from|cite|quote|reference|do not invent|stick to|grounded in|according to)\\b",
+      "description": "Explicit instruction to ground the answer in the supplied context (anti-hallucination guardrail)."
+    },
+    {
+      "id": "format_specified",
+      "weight": 15,
+      "test": "has_format_directive",
+      "description": "Output format is constrained."
+    },
+    {
+      "id": "length_specified",
+      "weight": 10,
+      "test": "has_length_directive",
+      "description": "Length is constrained so the model doesn't dump the whole context back at the user."
+    },
+    {
+      "id": "no_redundant_quote",
+      "weight": 10,
+      "test": "not_regex",
+      "pattern": "\\b(quote the entire|repeat the full|reproduce the whole|copy the whole)\\b",
+      "description": "Doesn't ask the model to repeat the context wholesale."
+    },
+    {
+      "id": "min_context_length",
+      "weight": 10,
+      "test": "length_min",
+      "value": 200,
+      "description": "Prompt is long enough to plausibly carry real context (≥200 chars). Below that this is probably a task_only mislabel."
+    },
+    {
+      "id": "audience_specified",
+      "weight": 5,
+      "test": "has_audience_directive",
+      "description": "Audience is named."
+    }
+  ]
+}

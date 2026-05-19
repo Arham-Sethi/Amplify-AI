@@ -4,6 +4,7 @@
     { "source": "/login", "destination": "/login.html" },
     { "source": "/account", "destination": "/account.html" },
     { "source": "/waitlist-confirm", "destination": "/waitlist-confirm.html" },
+    { "source": "/onboarding", "destination": "/onboarding.html" },
     { "source": "/auth/callback", "destination": "/auth/callback.html" }
   ],
   "headers": [

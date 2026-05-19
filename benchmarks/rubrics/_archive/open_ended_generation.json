@@ -1,0 +1,70 @@
+{
+  "version": "v1",
+  "category": "open_ended_generation",
+  "description": "Prompt asking for ideation, brainstorming, options, alternatives, or any 'give me N of X' generative task where the value is breadth and variety.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "ideation_verb",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(brainstorm|ideate|generate|come up with|suggest|propose|list|enumerate|name|invent|imagine|draft|think of)\\b",
+      "description": "An ideation/generation verb is present."
+    },
+    {
+      "id": "target_count",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(\\d+|five|ten|three|seven|twenty|fifteen|fifty)\\s+(?:ideas?|options?|alternatives?|suggestions?|names?|approaches?|angles?|examples?|directions?|variations?|prompts?|titles?|taglines?|headlines?|concepts?|ways?)\\b",
+      "description": "Specific count is requested (e.g. '10 ideas', 'five options')."
+    },
+    {
+      "id": "domain_or_context",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(for|about|on|around|targeting|aimed at|in the|for the|in a|in an)\\b\\s+\\w+",
+      "description": "A domain, niche, or audience is named so the ideas land somewhere concrete."
+    },
+    {
+      "id": "constraints_present",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(must|should|avoid|don't|do not|exclude|each|per|under|over|max|min|at least|at most|no more than|with|without)\\b",
+      "description": "At least one constraint that shapes the output (length per item, must-include, avoid-list, etc.)."
+    },
+    {
+      "id": "diversity_directive",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(diverse|distinct|different|varied|wide range|spectrum|across|mix of|cover|spanning|each one|each must|orthogonal|non[- ]overlapping)\\b",
+      "description": "Diversity is requested so the model doesn't return ten near-duplicates."
+    },
+    {
+      "id": "format_specified",
+      "weight": 10,
+      "test": "has_format_directive",
+      "description": "Output format is constrained (numbered list, table, JSON array)."
+    },
+    {
+      "id": "tone_specified",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(formal|casual|professional|friendly|neutral|playful|punchy|witty|technical|plain|catchy|edgy|warm)\\b",
+      "description": "Tone is named."
+    },
+    {
+      "id": "ranking_directive",
+      "weight": 5,
+      "test": "regex",
+      "pattern": "\\b(rank|sort|order|prioritize|best first|score|rate|grade|tier|prefer)\\b",
+      "description": "Asks the model to rank or order — bonus signal for 'pick the best'."
+    },
+    {
+      "id": "min_useful_length",
+      "weight": 5,
+      "test": "length_min",
+      "value": 30,
+      "description": "Prompt is at least 30 characters."
+    }
+  ]
+}

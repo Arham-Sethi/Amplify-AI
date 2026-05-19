@@ -1,0 +1,67 @@
+{
+  "version": "v1",
+  "category": "task_only",
+  "description": "Single, well-bounded task with no role, no extended context, no multi-step workflow. The classic 'do this thing' prompt.",
+  "pass_threshold": 70,
+  "checks": [
+    {
+      "id": "task_verb_present",
+      "weight": 15,
+      "test": "has_task_verb",
+      "description": "Prompt names a concrete action (write, summarize, draft, generate, refactor, fix, translate, etc.) so the model knows the operation."
+    },
+    {
+      "id": "specific_subject",
+      "weight": 15,
+      "test": "regex",
+      "pattern": "\\b(this|that|the following|below|above|for|about|on|of)\\s+\\w{3,}",
+      "description": "Subject of the task is named (a noun phrase or referent) rather than implied."
+    },
+    {
+      "id": "format_specified",
+      "weight": 15,
+      "test": "has_format_directive",
+      "description": "Output format is constrained (bullets, table, JSON, markdown, prose, headings)."
+    },
+    {
+      "id": "length_specified",
+      "weight": 10,
+      "test": "has_length_directive",
+      "description": "Length is constrained (word count, sentence count, paragraph count, character cap)."
+    },
+    {
+      "id": "tone_specified",
+      "weight": 10,
+      "test": "regex",
+      "pattern": "\\b(formal|casual|professional|friendly|neutral|playful|concise|terse|warm|technical|plain)\\b",
+      "description": "Tone is named so the model can match register."
+    },
+    {
+      "id": "audience_specified",
+      "weight": 10,
+      "test": "has_audience_directive",
+      "description": "Audience is named (for engineers, for a non-technical board, for a 5-year-old, for the team, etc.)."
+    },
+    {
+      "id": "no_meta_filler",
+      "weight": 10,
+      "test": "not_regex",
+      "pattern": "\\b(please can you|i was wondering if|could you maybe|if it's not too much|i'd really appreciate)\\b",
+      "description": "No throat-clearing meta language that wastes tokens without changing the output."
+    },
+    {
+      "id": "min_useful_length",
+      "weight": 10,
+      "test": "length_min",
+      "value": 30,
+      "description": "Prompt is at least 30 characters — under that we almost certainly lack a real task."
+    },
+    {
+      "id": "constraints_present",
+      "weight": 5,
+      "test": "regex",
+      "pattern": "\\b(must|should|avoid|don't|do not|exclude|include only|limit to|no more than|at most|at least)\\b",
+      "description": "At least one explicit constraint or guardrail."
+    }
+  ]
+}
